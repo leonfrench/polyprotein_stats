@@ -105,3 +105,4 @@ dmypy.json
 .pyre/
 .Rproj.user
 .DS_Store
+polyprotein_stats.Rproj
