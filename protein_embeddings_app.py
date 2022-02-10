@@ -70,6 +70,7 @@ Given a set of proteins, this tool seeks to answer these questions:
 * can amino acid proportions, plus sequence length discriminate the input proteins from the rest of the proteome?
 * can the averaged per residue embeddings from a deep neural network discriminate the input proteins from the rest of the proteome?
 
+Source code is on [github](https://github.com/leonfrench/polyprotein_stats)
 """)
 
 target_genes = target_genes.splitlines()
