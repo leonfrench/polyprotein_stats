@@ -1,6 +1,8 @@
 # polyprotein_stats
 A small tool to test and visualize protein embeddings and amino acid proportions.
 
+Currently deployed on [streamlit.io](https://share.streamlit.io/leonfrench/polyprotein_stats/main/protein_embeddings_app.py).
+
 Given a set of proteins, this tool seeks to answer these questions:
 
 * is there a enrichment of one or two amino acids? 
