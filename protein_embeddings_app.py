@@ -90,8 +90,8 @@ st.sidebar.write("""
 
 Given a set of proteins, this tool seeks to answer these questions:
 
-* is there a enrichment of one or two amino acids? 
-* can amino acid proportions, plus sequence length discriminate the input proteins from the rest of the proteome?
+* is there a enrichment of amino acids composition? 
+* can amino acid composition, plus sequence length discriminate the input proteins from the rest of the proteome?
 * can the averaged per residue embeddings from a deep neural network discriminate the input proteins from the rest of the proteome?
 
 Source code is on [github](https://github.com/leonfrench/polyprotein_stats)
@@ -131,10 +131,10 @@ proportions = proportions.sort_values('gene_symbol')
 
 
 st.write("""
-#### Amino acid residue proportion enrichment tests
+#### Amino acid composition enrichment tests
 
 The figure and table below show results from testing if the given proteins are enriched for the proportions of amino acid pairs relative to the background proteins. 
-This is not testing bigrams but instead the proportions of specific residues. For example, the default input set of mitochondrially encoded proteins shows
+This is not testing bigrams but instead the composition or proportions of specific residues. For example, the default input set of mitochondrially encoded proteins shows
 depletion of arginine (R) and lysine (K) residues. In the figure, color represents the area under the receiver operating curve, 
 using the combined proportions of the amino acid pairs. The below table provides p-values with and without Bonferroni multiple test correction. Length is additionally added to the table to check if the input proteins are longer than the background set. 
 
