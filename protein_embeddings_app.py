@@ -36,6 +36,30 @@ def get_split_embeddings():
 	full = pd.concat([dfA, dfB])
 	return full 
 
+#get download for predicting on everything
+def get_download_button(X, y, n_jobs, all_embeddings, name):
+    #create a genome-wide ranking by training on the target genes
+    model = LogisticRegression(n_jobs=n_jobs, max_iter=500)
+    model.fit(X, y)
+    # Extract predictions from fitted model and add gene symbol
+    preds = model.predict(X)
+    probas = pd.DataFrame(model.predict_proba(X), columns=model.classes_)
+    probas['classification_target'] = all_embeddings['classification_target'].tolist()
+    probas['gene_symbol'] = all_embeddings['gene_symbol'].tolist()
+    probas = probas.sort_values(True, ascending=False)
+    probas = probas.drop([False], axis=1)
+    probas = probas.rename(columns = {True : "pvalue_for_target_set"})
+    cols = probas.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    probas = probas[cols]
+    st.download_button(
+        "Download classification predictions for all proteins using " + name,
+        probas.to_csv(index=False).encode('utf-8'),
+        name + "_genome_wide_predictions.csv",
+        "text/csv",
+        key='download-csv'
+    )
+
 #copies are needed because it gets modified - helps with cacheing
 all_embeddings = get_split_embeddings().copy()
 embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP.csv").copy()
@@ -75,14 +99,13 @@ Source code is on [github](https://github.com/leonfrench/polyprotein_stats)
 
 target_genes = target_genes.splitlines()
 
+background_matrices_genes = set(all_embeddings['gene_symbol']).intersection(proportions['gene_symbol'])
 
 if (background_genes == ""):
-  background_genes = all_embeddings['gene_symbol'].tolist()
+  background_genes = background_matrices_genes
 else:
   background_genes = background_genes.splitlines()
 
-
-background_matrices_genes = set(all_embeddings['gene_symbol']).intersection(proportions['gene_symbol'])
 
 target_genes = set(target_genes)
 target_genes_found =  target_genes.intersection(background_matrices_genes)
@@ -169,16 +192,16 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 
 ###classification 
 #should be equal to proportions target - needs checking
-y = all_embeddings['classification_target']
-
-X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
-X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
-
-n_splits = 5
-n_jobs = 1
 best_predicted_genes = []
 
 if len(target_genes) > 11:
+    y = all_embeddings['classification_target']
+    
+    X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
+    X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
+    
+    n_splits = 5
+    n_jobs = 1
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
@@ -259,9 +282,17 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
     
     st.write("More statistics from the classification tests are in the below dictionary:")
     st.write(measures)
+    
+    get_download_button(X, y, n_jobs, all_embeddings, "ProtT5")
+    #input, X, y, n_jobs, all_embeddings, name
+    get_download_button(X_proportions, y, n_jobs, all_embeddings, "proportions")
+
+    
 else:
 	st.write("#### Classification results")
 	st.write("Too few genes to run classification task - skipping")
+
+
 
 
 st.write("""#### Embedding visualization
