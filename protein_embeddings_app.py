@@ -223,9 +223,14 @@ if len(target_genes) > 11:
         y_train = y.iloc[train_idx]
         y_test = y.iloc[test_idx]
     
+        st.write("fold after mem:" + str(i))
+        
         model = LogisticRegression(n_jobs=n_jobs)
+        st.write("fold after init:" + str(i))
         model.fit(X_train, y_train)
 
+        st.write("fold after fit:" + str(i))
+        
         # # Extract predictions from fitted model
         # preds = model.predict(X_test)
         # # probs for classes ordered in same manner as model.classes_
