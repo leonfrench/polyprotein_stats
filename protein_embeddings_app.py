@@ -195,7 +195,7 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
-if len(target_genes) > 11:
+if len(target_genes) > 110:
     y = all_embeddings['classification_target']
     
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
