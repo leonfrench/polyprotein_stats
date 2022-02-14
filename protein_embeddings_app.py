@@ -165,13 +165,13 @@ aa_AUC_df_square = (aa_AUC_df.pivot(index=['residue B'],columns='residue A', val
          .sort_index(level=[1,0]))
     
 
-sns.set_theme()
-with _lock:
-  fig = plt.figure(figsize=(10, 7))
-  aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
-  ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
+#sns.set_theme()
+#with _lock:
+#  fig = plt.figure(figsize=(10, 7))
+#  aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
+#  ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
 
-  st.pyplot(fig, clear_figure = True)
+#  st.pyplot(fig, clear_figure = True)
 
 #tag on length AUC value, could just be printed
 auc_for_length = roc_auc_score(proportions['classification_target'], proportions['length'])
