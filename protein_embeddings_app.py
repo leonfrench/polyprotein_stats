@@ -33,7 +33,7 @@ def get_file_with_cache(filename):
 #@st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.1.csv.zip")
-    dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
+    #dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
     full = pd.concat([dfA, dfB])
     return full 
 
