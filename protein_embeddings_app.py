@@ -24,16 +24,14 @@ import bokeh.plotting
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
 #cache the file loading to speed things up
-@st.cache
+#@st.cache
 def get_file_with_cache(filename):
-    time.sleep(5)
     df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
     return df
 
 #this is split in two to allow easy deployment from github
-@st.cache
+#@st.cache
 def get_split_embeddings():
-    time.sleep(5)
     dfA = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.1.csv.zip")
     dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
     full = pd.concat([dfA, dfB])
