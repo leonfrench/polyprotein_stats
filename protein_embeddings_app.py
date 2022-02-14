@@ -170,7 +170,7 @@ fig = plt.figure(figsize=(10, 7))
 aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
 ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
 
-st.pyplot(fig)
+st.pyplot(fig, clear_figure = True)
 
 #tag on length AUC value, could just be printed
 auc_for_length = roc_auc_score(proportions['classification_target'], proportions['length'])
