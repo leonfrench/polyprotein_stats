@@ -195,10 +195,7 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
-
-X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
-
-if len(target_genes) > 110:
+if len(target_genes) > 11:
     y = all_embeddings['classification_target']
     
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
@@ -213,10 +210,13 @@ if len(target_genes) > 110:
     auc_scores = []
     auc_scores_proportions = []
     for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
+      
         X_train = X.iloc[train_idx, :]
         y_train = y.iloc[train_idx]
         X_test = X.iloc[test_idx, :]
         y_test = y.iloc[test_idx]
+        
+        time.sleep(3) #test sleep to allow health check
     
         X_proportions_train = X_proportions.iloc[train_idx, :]
         X_proportions_test = X_proportions.iloc[test_idx, :]
