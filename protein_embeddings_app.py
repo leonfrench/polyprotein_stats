@@ -216,16 +216,16 @@ if len(target_genes) > 11:
         X_test = X.iloc[test_idx, :]
         y_test = y.iloc[test_idx]
         
-        print("fold:" + str(i))
+        st.write("fold:" + str(i))
         
         X_proportions_train = X_proportions.iloc[train_idx, :]
         X_proportions_test = X_proportions.iloc[test_idx, :]
         y_train = y.iloc[train_idx]
         y_test = y.iloc[test_idx]
     
-        # model = LogisticRegression(n_jobs=n_jobs, max_iter=500)
-        # model.fit(X_train, y_train)
-        # 
+        model = LogisticRegression(n_jobs=n_jobs)
+        model.fit(X_train, y_train)
+
         # # Extract predictions from fitted model
         # preds = model.predict(X_test)
         # # probs for classes ordered in same manner as model.classes_
