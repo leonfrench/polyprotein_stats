@@ -1,6 +1,7 @@
 #todo put online
 
 
+import time
 import seaborn as sns
 import matplotlib.pyplot as plt
 import streamlit as st
@@ -25,18 +26,18 @@ embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 
 #cache the file loading to speed things up
 @st.cache
 def get_file_with_cache(filename):
-  sleep(5)
-  df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
-	return df 
+    time.sleep(5)
+    df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
+    return df
 
 #this is split in two to allow easy deployment from github
 @st.cache
 def get_split_embeddings():
-  sleep(5)
-	dfA = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.1.csv.zip")
-	dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
-	full = pd.concat([dfA, dfB])
-	return full 
+    time.sleep(5)
+    dfA = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.1.csv.zip")
+    dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
+    full = pd.concat([dfA, dfB])
+    return full 
 
 #get download for predicting on everything
 def get_download_button(X, y, n_jobs, all_embeddings, name):
