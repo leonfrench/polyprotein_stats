@@ -1,6 +1,3 @@
-#todo put online
-
-
 import time
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -24,16 +21,16 @@ import bokeh.plotting
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
 #cache the file loading to speed things up
-#@st.cache
+@st.cache
 def get_file_with_cache(filename):
     df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
     return df
 
 #this is split in two to allow easy deployment from github
-#@st.cache
+@st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.1.csv.zip")
-    #dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
+    dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
     full = pd.concat([dfA, dfB])
     return full 
 
@@ -66,7 +63,8 @@ all_embeddings = get_split_embeddings().copy()
 embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
-
+import gc
+gc.collect()
 
 st.sidebar.write("""### Polyprotein stats web app by Leon French
 Embeddings for the human proteins is from the ProtT5 embedder at full precision (prottrans_t5_xl_u50 model) that were 
@@ -188,8 +186,6 @@ aa_AUC_df['pvalue_bonf'] = multitest.multipletests(aa_AUC_df['pvalue'].tolist(),
 aa_AUC_df = aa_AUC_df.sort_values('auc', ascending=False)
 
 st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_bonf": "{:.2g}"}))
-
-
 
 ###classification 
 #should be equal to proportions target - needs checking
