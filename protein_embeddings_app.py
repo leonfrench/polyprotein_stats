@@ -18,6 +18,9 @@ from statsmodels.stats import multitest
 import bokeh.io
 import bokeh.plotting
 
+from matplotlib.backends.backend_agg import RendererAgg
+_lock = RendererAgg.lock
+
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
 #cache the file loading to speed things up
