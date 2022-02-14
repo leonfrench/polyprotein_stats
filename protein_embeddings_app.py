@@ -216,8 +216,8 @@ if len(target_genes) > 11:
         X_test = X.iloc[test_idx, :]
         y_test = y.iloc[test_idx]
         
-        time.sleep(3) #test sleep to allow health check
-    
+        print("fold:" + str(i))
+        
         X_proportions_train = X_proportions.iloc[train_idx, :]
         X_proportions_test = X_proportions.iloc[test_idx, :]
         y_train = y.iloc[train_idx]
@@ -246,7 +246,7 @@ if len(target_genes) > 11:
         auc_scores_proportions.append(auc)
         
         
-    
+    print("done folds")
     best_predicted_genes = set(best_predicted_genes)
     top_predicted_hits = best_predicted_genes.intersection(target_genes)
     best_predicted_genes = best_predicted_genes.difference(target_genes)
