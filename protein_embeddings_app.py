@@ -210,8 +210,6 @@ if len(target_genes) > 11:
     auc_scores = []
     auc_scores_proportions = []
     
-    time.sleep(5) #give streamlit.io some time to get setup
-    
     for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
       
         X_train = X.iloc[train_idx, :]
@@ -232,7 +230,6 @@ if len(target_genes) > 11:
         #st.write("fold after init:" + str(i))
 
         gc.collect() 
-        time.sleep(4)
 
         model.fit(X_train, y_train)
 
