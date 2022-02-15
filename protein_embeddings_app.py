@@ -289,7 +289,7 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
 
     st.markdown(f"Using the learned ProtT5 embeddings (see sidepanel for details), the average AUC is **{measures['AUC']:.2f}**.")
     
-    st.markdown(f"Testing if the embedding based AUC values for the {'n_splits'} folds deviate from the expected 0.5 reveals a p-value of **{measures['AUC_p_value versus 0.5']:.2g}**.")    
+    st.markdown(f"Testing if the embedding based AUC values for the {n_splits} folds deviate from the expected 0.5 reveals a p-value of **{measures['AUC_p_value versus 0.5']:.2g}**.")    
 
     st.markdown(f"The difference between the AUC values from the complex embeddings and simple proportions is {measures['gain over proportions']:.2g} (p-value = **{measures['AUC proportions vrs embeddings pvalue']:.2g}**, paired t-test).")    
     
