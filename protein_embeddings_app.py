@@ -202,13 +202,16 @@ if len(target_genes) > 11:
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     
-    n_splits = 4
+    n_splits = 5
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
     f1_scores = []
     auc_scores = []
     auc_scores_proportions = []
+    
+    time.sleep(5) #give streamlit.io some time to get setup
+    
     for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
       
         X_train = X.iloc[train_idx, :]
@@ -216,19 +219,20 @@ if len(target_genes) > 11:
         X_test = X.iloc[test_idx, :]
         y_test = y.iloc[test_idx]
         
-        st.write("fold:" + str(i))
+        #st.write("fold:" + str(i))
         
         X_proportions_train = X_proportions.iloc[train_idx, :]
         X_proportions_test = X_proportions.iloc[test_idx, :]
         y_train = y.iloc[train_idx]
         y_test = y.iloc[test_idx]
     
-        st.write("fold after mem:" + str(i))
+        #st.write("fold after mem:" + str(i))
         
         model = LogisticRegression()
-        st.write("fold after init:" + str(i))
+        #st.write("fold after init:" + str(i))
 
         gc.collect() 
+        time.sleep(4)
 
         model.fit(X_train, y_train)
 
