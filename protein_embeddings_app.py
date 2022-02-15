@@ -67,7 +67,6 @@ all_embeddings = get_split_embeddings().copy()
 embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
-gc.collect()
 
 st.sidebar.write("""### Polyprotein stats web app by Leon French
 Embeddings for the human proteins is from the ProtT5 embedder at full precision (prottrans_t5_xl_u50 model) that were 
@@ -196,10 +195,6 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
-import logging
-
-logging.basicConfig(filename='example.log')
-
 
 if len(target_genes) > 11:
     y = all_embeddings['classification_target']
@@ -207,7 +202,7 @@ if len(target_genes) > 11:
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     
-    n_splits = 5
+    n_splits = 2
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
@@ -232,6 +227,9 @@ if len(target_genes) > 11:
         
         model = LogisticRegression()
         st.write("fold after init:" + str(i))
+
+        gc.collect() 
+
         model.fit(X_train, y_train)
 
         #st.write("fold after fit:" + str(i))
