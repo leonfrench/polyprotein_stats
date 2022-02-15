@@ -195,14 +195,14 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
+n_splits = 4
 
-if len(target_genes) > 11:
+if len(target_genes) >= n_splits*2:
     y = all_embeddings['classification_target']
     
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     
-    n_splits = 4
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
