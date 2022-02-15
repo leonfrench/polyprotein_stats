@@ -230,8 +230,8 @@ if len(target_genes) > 11:
     
         st.write("fold after mem:" + str(i))
         
-        #model = LogisticRegression(n_jobs=n_jobs)
-        #st.write("fold after init:" + str(i))
+        model = LogisticRegression(n_jobs=n_jobs)
+        st.write("fold after init:" + str(i))
         #model.fit(X_train, y_train)
 
         #st.write("fold after fit:" + str(i))
