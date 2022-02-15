@@ -234,25 +234,25 @@ if len(target_genes) > 11:
         model.fit(X_train, y_train)
 
         #st.write("fold after fit:" + str(i))
-        
-        # # Extract predictions from fitted model
-        # preds = model.predict(X_test)
-        # # probs for classes ordered in same manner as model.classes_
-        # probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
-        # 
-        # # Get metrics for each model
-        # f1 = f1_score(y_test, preds)
-        # auc = roc_auc_score(y_test, probas[True])
-        # f1_scores.append(f1)
-        # auc_scores.append(auc)
-        # #track the gene with the max prediction for the true class
-        # best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
-        # 
-        # #run the model again with proportions instead of embeddings
-        # model.fit(X_proportions_train, y_train)
-        # probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
-        # auc = roc_auc_score(y_test, probas[True])
-        # auc_scores_proportions.append(auc)
+
+        # Extract predictions from fitted model
+        preds = model.predict(X_test)
+        # probs for classes ordered in same manner as model.classes_
+        probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
+
+        # Get metrics for each model
+        f1 = f1_score(y_test, preds)
+        auc = roc_auc_score(y_test, probas[True])
+        f1_scores.append(f1)
+        auc_scores.append(auc)
+        #track the gene with the max prediction for the true class
+        best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
+
+        #run the model again with proportions instead of embeddings
+        model.fit(X_proportions_train, y_train)
+        probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
+        auc = roc_auc_score(y_test, probas[True])
+        auc_scores_proportions.append(auc)
         
         
     print("done folds")
