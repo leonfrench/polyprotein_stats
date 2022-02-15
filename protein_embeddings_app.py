@@ -210,49 +210,50 @@ if len(target_genes) > 11:
     auc_scores = []
     auc_scores_proportions = []
     
-    for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
+    with st.spinner('Please wait...'):
+      for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
+        
+          X_train = X.iloc[train_idx, :]
+          y_train = y.iloc[train_idx]
+          X_test = X.iloc[test_idx, :]
+          y_test = y.iloc[test_idx]
+          
+          #st.write("fold:" + str(i))
+          
+          X_proportions_train = X_proportions.iloc[train_idx, :]
+          X_proportions_test = X_proportions.iloc[test_idx, :]
+          y_train = y.iloc[train_idx]
+          y_test = y.iloc[test_idx]
       
-        X_train = X.iloc[train_idx, :]
-        y_train = y.iloc[train_idx]
-        X_test = X.iloc[test_idx, :]
-        y_test = y.iloc[test_idx]
-        
-        #st.write("fold:" + str(i))
-        
-        X_proportions_train = X_proportions.iloc[train_idx, :]
-        X_proportions_test = X_proportions.iloc[test_idx, :]
-        y_train = y.iloc[train_idx]
-        y_test = y.iloc[test_idx]
-    
-        #st.write("fold after mem:" + str(i))
-        
-        model = LogisticRegression()
-        #st.write("fold after init:" + str(i))
-
-        gc.collect() 
-
-        model.fit(X_train, y_train)
-
-        #st.write("fold after fit:" + str(i))
-
-        # Extract predictions from fitted model
-        preds = model.predict(X_test)
-        # probs for classes ordered in same manner as model.classes_
-        probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
-
-        # Get metrics for each model
-        f1 = f1_score(y_test, preds)
-        auc = roc_auc_score(y_test, probas[True])
-        f1_scores.append(f1)
-        auc_scores.append(auc)
-        #track the gene with the max prediction for the true class
-        best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
-
-        #run the model again with proportions instead of embeddings
-        model.fit(X_proportions_train, y_train)
-        probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
-        auc = roc_auc_score(y_test, probas[True])
-        auc_scores_proportions.append(auc)
+          #st.write("fold after mem:" + str(i))
+          
+          model = LogisticRegression()
+          #st.write("fold after init:" + str(i))
+  
+          gc.collect() 
+  
+          model.fit(X_train, y_train)
+  
+          #st.write("fold after fit:" + str(i))
+  
+          # Extract predictions from fitted model
+          preds = model.predict(X_test)
+          # probs for classes ordered in same manner as model.classes_
+          probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
+  
+          # Get metrics for each model
+          f1 = f1_score(y_test, preds)
+          auc = roc_auc_score(y_test, probas[True])
+          f1_scores.append(f1)
+          auc_scores.append(auc)
+          #track the gene with the max prediction for the true class
+          best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
+  
+          #run the model again with proportions instead of embeddings
+          model.fit(X_proportions_train, y_train)
+          probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
+          auc = roc_auc_score(y_test, probas[True])
+          auc_scores_proportions.append(auc)
         
         
     best_predicted_genes = set(best_predicted_genes)
