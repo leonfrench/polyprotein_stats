@@ -172,6 +172,7 @@ with _lock:
   ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
 
   st.pyplot(fig, clear_figure = True)
+  plt.close("all")
 
 #tag on length AUC value, could just be printed
 auc_for_length = roc_auc_score(proportions['classification_target'], proportions['length'])
