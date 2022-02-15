@@ -202,7 +202,7 @@ if len(target_genes) > 11:
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     
-    n_splits = 4
+    n_splits = 5
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
