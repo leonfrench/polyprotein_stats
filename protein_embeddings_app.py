@@ -195,6 +195,11 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
+import logging
+
+logging.basicConfig(filename='example.log')
+
+
 if len(target_genes) > 11:
     y = all_embeddings['classification_target']
     
@@ -217,19 +222,20 @@ if len(target_genes) > 11:
         y_test = y.iloc[test_idx]
         
         st.write("fold:" + str(i))
+        logging.debug("fold:" + str(i))
         
         X_proportions_train = X_proportions.iloc[train_idx, :]
         X_proportions_test = X_proportions.iloc[test_idx, :]
         y_train = y.iloc[train_idx]
         y_test = y.iloc[test_idx]
     
-        st.write("fold after mem:" + str(i))
+        logging.debug("fold after mem:" + str(i))
         
         model = LogisticRegression(n_jobs=n_jobs)
-        st.write("fold after init:" + str(i))
+        logging.debug("fold after init:" + str(i))
         model.fit(X_train, y_train)
 
-        st.write("fold after fit:" + str(i))
+        logging.debug("fold after fit:" + str(i))
         
         # # Extract predictions from fitted model
         # preds = model.predict(X_test)
