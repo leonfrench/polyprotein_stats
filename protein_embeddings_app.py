@@ -207,7 +207,6 @@ if len(target_genes) > 11:
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     
     n_splits = 5
-    n_jobs = 1
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
@@ -230,9 +229,9 @@ if len(target_genes) > 11:
     
         st.write("fold after mem:" + str(i))
         
-        model = LogisticRegression(n_jobs=n_jobs)
+        model = LogisticRegression()
         st.write("fold after init:" + str(i))
-        #model.fit(X_train, y_train)
+        model.fit(X_train, y_train)
 
         #st.write("fold after fit:" + str(i))
         
