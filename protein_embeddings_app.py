@@ -1,3 +1,4 @@
+import gc
 import time
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -38,9 +39,9 @@ def get_split_embeddings():
     return full 
 
 #get download for predicting on everything
-def get_download_button(X, y, n_jobs, all_embeddings, name):
+def get_download_button(X, y, all_embeddings, name):
     #create a genome-wide ranking by training on the target genes
-    model = LogisticRegression(n_jobs=n_jobs, max_iter=500)
+    model = LogisticRegression()
     model.fit(X, y)
     # Extract predictions from fitted model and add gene symbol
     preds = model.predict(X)
@@ -66,7 +67,6 @@ all_embeddings = get_split_embeddings().copy()
 embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
-import gc
 gc.collect()
 
 st.sidebar.write("""### Polyprotein stats web app by Leon French
@@ -296,9 +296,9 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
     st.write("More statistics from the classification tests are in the below dictionary:")
     st.write(measures)
     
-    get_download_button(X, y, n_jobs, all_embeddings, "ProtT5")
+    get_download_button(X, y, all_embeddings, "ProtT5")
     #input, X, y, n_jobs, all_embeddings, name
-    get_download_button(X_proportions, y, n_jobs, all_embeddings, "proportions")
+    get_download_button(X_proportions, y, all_embeddings, "proportions")
 
     
 else:
