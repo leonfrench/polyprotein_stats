@@ -196,7 +196,7 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
-n_splits = 3
+n_splits = 4
 
 if len(target_genes) >= n_splits*2:
     y = all_embeddings['classification_target']
@@ -207,7 +207,6 @@ if len(target_genes) >= n_splits*2:
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
-    f1_scores = []
     auc_scores = []
     auc_scores_proportions = []
     
@@ -238,14 +237,11 @@ if len(target_genes) >= n_splits*2:
           #st.write("fold after fit:" + str(i))
   
           # Extract predictions from fitted model
-          preds = model.predict(X_test)
           # probs for classes ordered in same manner as model.classes_
           probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
   
           # Get metrics for each model
-          f1 = f1_score(y_test, preds)
           auc = roc_auc_score(y_test, probas[True])
-          f1_scores.append(f1)
           auc_scores.append(auc)
           #track the gene with the max prediction for the true class
           best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
@@ -266,7 +262,6 @@ if len(target_genes) >= n_splits*2:
                 'number_of_used_genes': len(target_genes_found),
                 'number_of_input_background_genes': len(background_genes),
                 'number_of_used_background_genes': len(background_genes_found),
-                'f1': np.mean(f1_scores),
                 'AUC': np.mean(auc_scores),
                 'AUC standard dev': np.std(auc_scores),
                 'gain over proportions' : np.mean(auc_scores)-np.mean(auc_scores_proportions),
