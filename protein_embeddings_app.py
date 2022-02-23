@@ -8,8 +8,7 @@ import functools
 import numpy as np
 import os, random
 from datetime import datetime
-from sklearn.metrics import f1_score
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import f1_score, average_precision_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
@@ -208,6 +207,7 @@ if len(target_genes) >= n_splits*2:
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
     auc_scores = []
+    auprc_scores = []
     auc_scores_proportions = []
     
     with st.spinner('Please wait...'):
@@ -251,6 +251,10 @@ if len(target_genes) >= n_splits*2:
           probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
           auc = roc_auc_score(y_test, probas[True])
           auc_scores_proportions.append(auc)
+
+          #area under precision recall curve
+          auprc = average_precision_score(y_test, probas[True])
+          auprc_scores.append(auprc)
         
         
     best_predicted_genes = set(best_predicted_genes)
@@ -262,6 +266,7 @@ if len(target_genes) >= n_splits*2:
                 'number_of_used_genes': len(target_genes_found),
                 'number_of_input_background_genes': len(background_genes),
                 'number_of_used_background_genes': len(background_genes_found),
+                'area_under_precision_recall_curve_embeddings': np.mean(auprc_scores), 
                 'AUC': np.mean(auc_scores),
                 'AUC standard dev': np.std(auc_scores),
                 'gain over proportions' : np.mean(auc_scores)-np.mean(auc_scores_proportions),
