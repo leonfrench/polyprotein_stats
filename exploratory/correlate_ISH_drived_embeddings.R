@@ -34,6 +34,12 @@ protT5 <- bind_rows(protT5_1,protT5_2)
 
 dim(protT5)
 
+CZI_image_spectra <- read_csv(here("data", "CZI_image_spectra","feature_spectra.csv"))
+dim(CZI_image_spectra)
+run_mantel_on_data_frames(protT5, CZI_image_spectra, 99)
+run_mantel_on_data_frames(CZI_image_spectra, triplet, 999)
+setdiff(CZI_image_spectra$gene_symbol, protT5$gene_symbol)
+
 #main result - comparing triplet and protT5
 run_mantel_on_data_frames(protT5, triplet, 99)
 
