@@ -58,7 +58,7 @@ def get_download_button(X, y, all_embeddings, name):
         probas.to_csv(index=False).encode('utf-8'),
         name + "_genome_wide_predictions.csv",
         "text/csv",
-        key='download-csv'
+        key=name + '-download-csv'
     )
 
 #copies are needed because it gets modified - helps with cacheing
