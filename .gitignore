@@ -106,3 +106,4 @@ dmypy.json
 .Rproj.user
 .DS_Store
 polyprotein_stats.Rproj
+.Rhistory
