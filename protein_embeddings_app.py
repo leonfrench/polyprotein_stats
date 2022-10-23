@@ -235,7 +235,6 @@ if len(target_genes) >= n_splits*2:
           
           #save memory
           X_train = None
-          y_train = None
           gc.collect() 
           #st.write("fold after fit:" + str(i))
   
