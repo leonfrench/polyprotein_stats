@@ -34,10 +34,11 @@ def get_file_with_cache(filename):
 @st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("gene_symbol_summarized.0.csv.zip")
-    dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
-    dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
-    full = pd.concat([dfA, dfB, dfC])
-    return full 
+    return dfA
+    #dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
+    #dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
+    #full = pd.concat([dfA, dfB, dfC])
+    #return full 
 
 #get download for predicting on everything
 def get_download_button(X, y, all_embeddings, name):
