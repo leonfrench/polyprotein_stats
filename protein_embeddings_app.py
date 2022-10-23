@@ -21,7 +21,8 @@ import bokeh.plotting
 from matplotlib.backends.backend_agg import RendererAgg
 _lock = RendererAgg.lock
 
-embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
+embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'esm_embeddings')
+logistic_reg_max_iter = 300
 
 #cache the file loading to speed things up
 @st.cache
@@ -32,15 +33,16 @@ def get_file_with_cache(filename):
 #this is split in two to allow easy deployment from github
 @st.cache
 def get_split_embeddings():
-    dfA = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.1.csv.zip")
-    dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
-    full = pd.concat([dfA, dfB])
+    dfA = get_file_with_cache("gene_symbol_summarized.0.csv.zip")
+    dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
+    dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
+    full = pd.concat([dfA, dfB, dfC])
     return full 
 
 #get download for predicting on everything
 def get_download_button(X, y, all_embeddings, name):
     #create a genome-wide ranking by training on the target genes
-    model = LogisticRegression()
+    model = LogisticRegression(max_iter=logistic_reg_max_iter)
     model.fit(X, y)
     # Extract predictions from fitted model and add gene symbol
     preds = model.predict(X)
@@ -227,7 +229,8 @@ if len(target_genes) >= n_splits*2:
       
           #st.write("fold after mem:" + str(i))
           
-          model = LogisticRegression()
+          #boost max iter from 100 to 300
+          model = LogisticRegression(max_iter=logistic_reg_max_iter)
           #st.write("fold after init:" + str(i))
   
           gc.collect() 
@@ -288,7 +291,7 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
 
     st.markdown(f"Using proportions and length alone, the average AUC is **{measures['AUC proportions']:.2f}**.")
 
-    st.markdown(f"Using the learned ProtT5 embeddings (see sidepanel for details), the average AUC is **{measures['AUC']:.2f}**.")
+    st.markdown(f"Using the learned embeddings (see sidepanel for details), the average AUC is **{measures['AUC']:.2f}**.")
     
     st.markdown(f"Testing if the embedding based AUC values for the {n_splits} folds deviate from the expected 0.5 reveals a p-value of **{measures['AUC_p_value versus 0.5']:.2g}**.")    
 
