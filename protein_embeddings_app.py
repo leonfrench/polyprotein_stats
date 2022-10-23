@@ -303,12 +303,12 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
     st.write("More statistics from the classification tests are in the below dictionary:")
     st.write(measures)
     
-    X = all_embeddings
-    X = X.drop(['classification_target', 'gene_symbol'], axis = 1)
+    #X = all_embeddings
+    #X = X.drop(['classification_target', 'gene_symbol'], axis = 1)
 
-    get_download_button(X, y, all_embeddings, "Prot_ESM")
+    #get_download_button(X, y, all_embeddings, "Prot_ESM")
     #input, X, y, n_jobs, all_embeddings, name
-    get_download_button(X_proportions, y, all_embeddings, "proportions")
+    #get_download_button(X_proportions, y, all_embeddings, "proportions")
 
     
 else:
