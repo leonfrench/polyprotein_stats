@@ -34,9 +34,7 @@ def get_file_with_cache(filename):
 @st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("gene_symbol_summarized.0.csv.zip")
-    #return dfA
     dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
-    #full = pd.concat([dfA, dfB])
     dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
     full = pd.concat([dfA, dfB, dfC])
     return full 
@@ -218,8 +216,6 @@ if len(target_genes) >= n_splits*2:
         
           X_train = X.iloc[train_idx, :]
           y_train = y.iloc[train_idx]
-          X_test = X.iloc[test_idx, :]
-          y_test = y.iloc[test_idx]
           
           st.write("fold:" + str(i))
           
@@ -228,20 +224,26 @@ if len(target_genes) >= n_splits*2:
           y_train = y.iloc[train_idx]
           y_test = y.iloc[test_idx]
       
-          #st.write("fold after mem:" + str(i))
+          st.write("fold after mem:" + str(i))
           
-          #boost max iter from 100 to 300
           model = LogisticRegression(max_iter=logistic_reg_max_iter)
           #st.write("fold after init:" + str(i))
   
           gc.collect() 
   
           model.fit(X_train, y_train)
-  
+          
+          #save memory
+          X_train = None
+          y_train = None
+          gc.collect() 
           #st.write("fold after fit:" + str(i))
   
           # Extract predictions from fitted model
           # probs for classes ordered in same manner as model.classes_
+          X_test = X.iloc[test_idx, :]
+          y_test = y.iloc[test_idx]
+
           probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
   
           # Get metrics for each model
