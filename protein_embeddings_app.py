@@ -70,8 +70,7 @@ proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy
 
 
 st.sidebar.write("""### Polyprotein stats web app by Leon French
-Embeddings for the human proteins are from the esm2_t48_15B_UR50D embedder from Meta that was created by 
-Lin et al. [github](https://github.com/facebookresearch/esm). Also, see 'Language models of protein sequences at the scale of evolution enable accurate structure prediction' by Elnaggar et al. [biorxiv preprint](https://www.biorxiv.org/content/10.1101/2022.07.20.500902v1).
+Embeddings for the human proteins are from the esm2_t48_15B_UR50D embedder from Meta [github](https://github.com/facebookresearch/esm). Also, see 'Language models of protein sequences at the scale of evolution enable accurate structure prediction' by Lin et al. [biorxiv preprint](https://www.biorxiv.org/content/10.1101/2022.07.20.500902v1).
 
 """)
 
