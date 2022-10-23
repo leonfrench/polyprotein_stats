@@ -22,7 +22,7 @@ from matplotlib.backends.backend_agg import RendererAgg
 _lock = RendererAgg.lock
 
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'esm_embeddings')
-logistic_reg_max_iter = 300
+logistic_reg_max_iter = 100
 
 #cache the file loading to speed things up
 @st.cache
@@ -31,14 +31,14 @@ def get_file_with_cache(filename):
     return df
 
 #this is split in two to allow easy deployment from github
-#@st.cache
+@st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("gene_symbol_summarized.0.csv.zip")
     #return dfA
     dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
-    full = pd.concat([dfA, dfB])
-    #dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
-    #full = pd.concat([dfA, dfB, dfC])
+    #full = pd.concat([dfA, dfB])
+    dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
+    full = pd.concat([dfA, dfB, dfC])
     return full 
 
 #get download for predicting on everything
