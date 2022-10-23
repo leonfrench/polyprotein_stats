@@ -25,7 +25,7 @@ embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 
 logistic_reg_max_iter = 100
 
 #cache the file loading to speed things up
-@st.cache
+#@st.cache
 def get_file_with_cache(filename):
     df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
     return df
@@ -221,7 +221,7 @@ if len(target_genes) >= n_splits*2:
           X_test = X.iloc[test_idx, :]
           y_test = y.iloc[test_idx]
           
-          #st.write("fold:" + str(i))
+          st.write("fold:" + str(i))
           
           X_proportions_train = X_proportions.iloc[train_idx, :]
           X_proportions_test = X_proportions.iloc[test_idx, :]
