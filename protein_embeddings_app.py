@@ -31,14 +31,15 @@ def get_file_with_cache(filename):
     return df
 
 #this is split in two to allow easy deployment from github
-@st.cache
+#@st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("gene_symbol_summarized.0.csv.zip")
-    return dfA
-    #dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
+    #return dfA
+    dfB = get_file_with_cache("gene_symbol_summarized.1.csv.zip")
+    full = pd.concat([dfA, dfB])
     #dfC = get_file_with_cache("gene_symbol_summarized.2.csv.zip")
     #full = pd.concat([dfA, dfB, dfC])
-    #return full 
+    return full 
 
 #get download for predicting on everything
 def get_download_button(X, y, all_embeddings, name):
@@ -197,7 +198,7 @@ st.write(aa_AUC_df.style.format({'auc' : "{:.2f}", "pvalue": "{:.2g}", "pvalue_b
 #should be equal to proportions target - needs checking
 best_predicted_genes = []
 
-n_splits = 4
+n_splits = 3
 
 if len(target_genes) >= n_splits*2:
     y = all_embeddings['classification_target']
@@ -283,7 +284,7 @@ if len(target_genes) >= n_splits*2:
     st.write("""#### Classification results
 
 To test if the input proteins can be discriminated from the background proteins based on their residue proportions (plus length) and 
-learned embeddings. This data derived from only sequences was used to train and test a logistic regression model (5 fold cross-validation, 
+learned embeddings. This data derived from only sequences was used to train and test a logistic regression model (cross-validation, 
 L2 loss, sklearn default parameters) that attempts to classify proteins as belonging to the input set. Given that the input genes are probably fewer than the background genes, we again report the AUC statistic.
 
 """)
