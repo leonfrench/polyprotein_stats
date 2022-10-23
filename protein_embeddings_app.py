@@ -201,10 +201,8 @@ n_splits = 3
 if len(target_genes) >= n_splits*2:
     y = all_embeddings['classification_target']
     
-    X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     
-
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
     auc_scores = []
@@ -212,9 +210,11 @@ if len(target_genes) >= n_splits*2:
     auc_scores_proportions = []
     
     with st.spinner('Please wait...'):
-      for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
+      for i, (train_idx, test_idx) in enumerate(skf.split(all_embeddings, y)):
         
-          X_train = X.iloc[train_idx, :]
+          X_train = all_embeddings.iloc[train_idx, :]
+          X_train = X_train.drop(['classification_target', 'gene_symbol'], axis = 1)
+          
           y_train = y.iloc[train_idx]
           
           #st.write("fold:" + str(i))
@@ -237,7 +237,9 @@ if len(target_genes) >= n_splits*2:
   
           # Extract predictions from fitted model
           # probs for classes ordered in same manner as model.classes_
-          X_test = X.iloc[test_idx, :]
+          X_test = all_embeddings.iloc[test_idx, :]
+          X_test = X_test.drop(['classification_target', 'gene_symbol'], axis = 1)
+          
           y_test = y.iloc[test_idx]
 
           probas = pd.DataFrame(model.predict_proba(X_test), columns=model.classes_)
@@ -301,6 +303,9 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
     st.write("More statistics from the classification tests are in the below dictionary:")
     st.write(measures)
     
+    X = all_embeddings
+    X = X.drop(['classification_target', 'gene_symbol'], axis = 1)
+
     get_download_button(X, y, all_embeddings, "Prot_ESM")
     #input, X, y, n_jobs, all_embeddings, name
     get_download_button(X_proportions, y, all_embeddings, "proportions")
@@ -309,8 +314,6 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
 else:
 	st.write("#### Classification results")
 	st.write("Too few genes to run classification task - skipping")
-
-
 
 
 st.write("""#### Embedding visualization
