@@ -217,14 +217,11 @@ if len(target_genes) >= n_splits*2:
           X_train = X.iloc[train_idx, :]
           y_train = y.iloc[train_idx]
           
-          st.write("fold:" + str(i))
+          #st.write("fold:" + str(i))
           
-          X_proportions_train = X_proportions.iloc[train_idx, :]
-          X_proportions_test = X_proportions.iloc[test_idx, :]
-          y_train = y.iloc[train_idx]
           y_test = y.iloc[test_idx]
       
-          st.write("fold after mem:" + str(i))
+          #st.write("fold after mem:" + str(i))
           
           model = LogisticRegression(max_iter=logistic_reg_max_iter)
           #st.write("fold after init:" + str(i))
@@ -252,6 +249,8 @@ if len(target_genes) >= n_splits*2:
           best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
   
           #run the model again with proportions instead of embeddings
+          X_proportions_train = X_proportions.iloc[train_idx, :]
+          X_proportions_test = X_proportions.iloc[test_idx, :]
           model.fit(X_proportions_train, y_train)
           probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
           auc = roc_auc_score(y_test, probas[True])
