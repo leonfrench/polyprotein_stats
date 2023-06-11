@@ -68,7 +68,8 @@ proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy
 
 
 st.sidebar.write("""### Geneformer gene embedding probe tool by Leon French
-Embeddings for the human genes are from the Geneformer model weights from [Hugging Face](https://huggingface.co/ctheodoris/Geneformer). Full details on Geneformer by Theodoris et al. is available at [Nature](https://www.nature.com/articles/s41586-023-06139-9).
+Embeddings for the human genes are from the Geneformer model weights from the [Hugging Face](https://huggingface.co/ctheodoris/Geneformer) repository. Full details on Geneformer by Theodoris et al. is available at [Nature](https://www.nature.com/articles/s41586-023-06139-9). The default gene list is from the [Lindbohm et al.](https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.12419) study of cognitive decline and risk of dementia.
+
 
 """)
 
@@ -77,7 +78,7 @@ Embeddings for the human genes are from the Geneformer model weights from [Huggi
 # Input Text Boxes
 ######################
 
-sequence_input = "MT-ATP8\nMT-ND5\nMT-ND2\nMT-ATP6\nMT-CO2\nMT-ND1\nMT-ND4\nMT-CYB\nMT-CO1\nMT-ND3\nMT-CO3\nMT-ND6\nMT-ND4L"
+sequence_input = "CDCP1\nCHRDL1\nGDF15\nGM2A\nIGFBP7\nMARCKSL1\nNPPB\nPLA2G2A\nRNASE6\nSIGLEC7\nSVEP1\nTIMP4\nTNFRSF11B\nTREM2\nWFDC2"
 
 target_genes = st.sidebar.text_area("Target genes input (gene symbol per line)", sequence_input, height=100)
 
@@ -100,7 +101,6 @@ Source code is on [github](https://github.com/leonfrench/polyprotein_stats)
 target_genes = target_genes.splitlines()
 
 background_matrices_genes = set(all_embeddings['gene_symbol']).intersection(proportions['gene_symbol'])
-print(len(background_matrices_genes))
 
 if (background_genes == ""):
   background_genes = background_matrices_genes
@@ -137,8 +137,7 @@ st.write("""
 #### Amino acid composition enrichment tests
 
 The figure and table below show results from testing if the given proteins are enriched for the proportions of amino acid pairs relative to the background proteins. 
-This is not testing bigrams but instead the composition or proportions of specific residues. For example, the default input set of mitochondrially encoded proteins shows
-depletion of arginine (R) and lysine (K) residues. In the figure, color represents the area under the receiver operating curve, 
+This is not testing bigrams but instead the composition or proportions of specific residues. In the figure, color represents the area under the receiver operating curve, 
 using the combined proportions of the amino acid pairs. The below table provides p-values with and without Bonferroni multiple test correction. Length is additionally added to the table to check if the input proteins are longer than the background set. 
 
 """)
