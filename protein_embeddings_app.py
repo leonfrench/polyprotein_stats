@@ -32,9 +32,10 @@ def get_file_with_cache(filename):
 #this is split in two to allow easy deployment from github
 @st.cache
 def get_split_embeddings():
-    dfA = get_file_with_cache("scGPT_embeddings_all_33M_filtered.csv.gz")
-    #dfB = get_file_with_cache("gene_symbol_summarized_prottrans_t5_xl_u50.2.csv.zip")
-    full = dfA
+    dfA = get_file_with_cache("SaProt_embeddings_part_1.csv.gz")
+    dfB = get_file_with_cache("SaProt_embeddings_part_2.csv.gz")
+    dfC = get_file_with_cache("SaProt_embeddings_part_3.csv.gz")
+    full = pd.concat([dfA, dfB, dfC])
     return full 
 
 #get download for predicting on everything
@@ -63,12 +64,12 @@ def get_download_button(X, y, all_embeddings, name):
 
 #copies are needed because it gets modified - helps with cacheing
 all_embeddings = get_split_embeddings().copy()
-embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP_scGPT_33M_filtered.csv").copy()
+embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP_SaProt.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
 
-st.sidebar.write("""### scGPT gene embedding probe tool by Leon French
-Embeddings for the human genes are from the scGPT model weights from the [Github](https://github.com/bowang-lab/scGPT) repository (model: Pretrained on 33 million normal human cells). Full details on scGPT by Cui et al. is available as a [preprint](https://www.biorxiv.org/content/10.1101/2023.04.30.538439v2). The default gene list is from the [Lindbohm et al.](https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.12419) study of cognitive decline and risk of dementia.
+st.sidebar.write("""### SaProt protein embedding probe tool by Leon French
+SaProt embeddings for the human genes are from Jin Su. Full details on SaProt by Su et al. is available as a [preprint](https://www.biorxiv.org/content/10.1101/2023.10.01.560349v2) and [Github](https://github.com/westlake-repl/SaProt) repository. The default gene list is from the [Lindbohm et al.](https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.12419) study of cognitive decline and risk of dementia.
 
 
 """)
@@ -93,9 +94,9 @@ Given a set of proteins, this tool seeks to answer these questions:
 
 * is there a enrichment of amino acids composition? 
 * can amino acid composition, plus sequence length discriminate the input proteins from the rest of the proteome?
-* can the scGPT weights, without finetuning discriminate the input genes from the rest of the proteome?
+* can the SaProt embeddings, without finetuning discriminate the input genes from the rest of the proteome?
 
-Source code is on [github](https://github.com/leonfrench/polyprotein_stats)
+Source code is on [github](https://github.com/leonfrench/polyprotein_stats) 
 """)
 
 target_genes = target_genes.splitlines()
