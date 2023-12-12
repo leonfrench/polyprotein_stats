@@ -29,7 +29,7 @@ def get_file_with_cache(filename):
     df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
     return df
 
-#this is split in two to allow easy deployment from github
+#this is split to allow easy deployment from github
 @st.cache
 def get_split_embeddings():
     dfA = get_file_with_cache("GenePT_embeddings_part_1.csv.gz")
