@@ -17,3 +17,5 @@ Embeddings for the human genes are from the Geneformer model weights from the [H
 Embeddings for the human genes are from the scGPT model weights from the [Github](https://github.com/bowang-lab/scGPT) repository (model: Pretrained on 33 million normal human cells). Full details on scGPT by Cui et al. is available as a [preprint](https://www.biorxiv.org/content/10.1101/2023.04.30.538439v2). 
 
 The default gene list is from the [Lindbohm et al.](https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.12419) study of cognitive decline and risk of dementia.
+
+Note - when deploying on streamlit.io use python version 3.10 (not the default!)
