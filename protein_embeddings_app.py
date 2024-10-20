@@ -32,10 +32,8 @@ def get_file_with_cache(filename):
 #this is split to allow easy deployment from github
 @st.cache
 def get_split_embeddings():
-    dfA = get_file_with_cache("GenePT_embeddings_no_NCBI_part_1.csv.gz")
-    dfB = get_file_with_cache("GenePT_embeddings_no_NCBI_part_2.csv.gz")
-    dfC = get_file_with_cache("GenePT_embeddings_no_NCBI_part_3.csv.gz")
-    return pd.concat([dfA, dfB, dfC])
+    dfA = get_file_with_cache("gene_symbol_summarized_orthrus_six_track.csv.zip")
+    return dfA
 
 #get download for predicting on everything
 def get_download_button(X, y, all_embeddings, name):
@@ -63,7 +61,7 @@ def get_download_button(X, y, all_embeddings, name):
 
 #copies are needed because it gets modified - helps with cacheing
 all_embeddings = get_split_embeddings().copy()
-embedding_UMAP = get_file_with_cache("GenePT_gene_symbol_no_NCBI_summarized_UMAP.csv").copy()
+embedding_UMAP = get_file_with_cache("gene_symbol_summarized_UMAP_orthrus_six_track.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
 
