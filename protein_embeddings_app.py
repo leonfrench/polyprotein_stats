@@ -18,24 +18,19 @@ from statsmodels.stats import multitest
 import bokeh.io
 import bokeh.plotting
 
-from matplotlib.backends.backend_agg import RendererAgg
-_lock = RendererAgg.lock
-
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
 #cache the file loading to speed things up
-@st.cache
+@st.cache_data
 def get_file_with_cache(filename):
     df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
     return df
 
 #this is split to allow easy deployment from github
-@st.cache
+@st.cache_data
 def get_split_embeddings():
-    dfA = get_file_with_cache("GenePT_embeddings_no_NCBI_part_1.csv.gz")
-    dfB = get_file_with_cache("GenePT_embeddings_no_NCBI_part_2.csv.gz")
-    dfC = get_file_with_cache("GenePT_embeddings_no_NCBI_part_3.csv.gz")
-    return pd.concat([dfA, dfB, dfC])
+    dfA = get_file_with_cache("hic_gene_gw_none_by_allbins_max_10kbp.gene_symbols.csv.gz")
+    return dfA
 
 #get download for predicting on everything
 def get_download_button(X, y, all_embeddings, name):
@@ -63,7 +58,7 @@ def get_download_button(X, y, all_embeddings, name):
 
 #copies are needed because it gets modified - helps with cacheing
 all_embeddings = get_split_embeddings().copy()
-embedding_UMAP = get_file_with_cache("GenePT_gene_symbol_no_NCBI_summarized_UMAP.csv").copy()
+embedding_UMAP = get_file_with_cache("hic_gene_gw_none_by_allbins_max_10kbp.UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
 
@@ -166,13 +161,13 @@ aa_AUC_df_square = (aa_AUC_df.pivot(index=['residue B'],columns='residue A', val
     
 
 sns.set_theme()
-with _lock:
-  fig = plt.figure(figsize=(10, 7))
-  aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
-  ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
 
-  st.pyplot(fig, clear_figure = True)
-  plt.close("all")
+fig = plt.figure(figsize=(10, 7))
+aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
+ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
+
+st.pyplot(fig, clear_figure = True)
+plt.close("all")
 
 #tag on length AUC value, could just be printed
 auc_for_length = roc_auc_score(proportions['classification_target'], proportions['length'])
@@ -281,7 +276,7 @@ if len(target_genes) >= n_splits*2:
     st.write("""#### Classification results
 
 To test if the input proteins can be discriminated from the background proteins based on their residue proportions (plus length) and 
-learned embeddings. This data derived from only sequences was used to train and test a logistic regression model (5 fold cross-validation, 
+learned embeddings. This data derived from only sequences was used to train and test a logistic regression model (4 fold cross-validation, 
 L2 loss, sklearn default parameters) that attempts to classify proteins as belonging to the input set. Given that the input genes are probably fewer than the background genes, we again report the AUC statistic.
 
 """)
