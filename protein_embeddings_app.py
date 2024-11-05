@@ -18,19 +18,16 @@ from statsmodels.stats import multitest
 import bokeh.io
 import bokeh.plotting
 
-from matplotlib.backends.backend_agg import RendererAgg
-_lock = RendererAgg.lock
-
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
 #cache the file loading to speed things up
-@st.cache
+@st.cache_data
 def get_file_with_cache(filename):
     df = pd.read_csv(os.path.join(embedding_file_path_processed, filename))
     return df
 
 #this is split in two to allow easy deployment from github
-@st.cache
+@st.cache_data
 def get_split_embeddings():
     dfA = get_file_with_cache("human_perProtein_ProstT5_inputp3Di.h5_human_genes.csv.gz")
     return dfA
@@ -164,13 +161,13 @@ aa_AUC_df_square = (aa_AUC_df.pivot(index=['residue B'],columns='residue A', val
     
 
 sns.set_theme()
-with _lock:
-  fig = plt.figure(figsize=(10, 7))
-  aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
-  ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
 
-  st.pyplot(fig, clear_figure = True)
-  plt.close("all")
+fig = plt.figure(figsize=(10, 7))
+aa_AUC_df_square = aa_AUC_df_square.fillna(0.5)
+ax = sns.heatmap(aa_AUC_df_square, center = 0.5, cmap = 'vlag')
+
+st.pyplot(fig, clear_figure = True)
+plt.close("all")
 
 #tag on length AUC value, could just be printed
 auc_for_length = roc_auc_score(proportions['classification_target'], proportions['length'])
