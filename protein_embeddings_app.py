@@ -29,9 +29,11 @@ def get_file_with_cache(filename):
 #this is split to allow easy deployment from github
 @st.cache_data
 def get_split_embeddings():
-    dfA = get_file_with_cache("ESM_C_300m_human_embeddings_mean.csv.gz")
-    return dfA
-
+    dfA = get_file_with_cache("ESM_C_600m_human_embeddings_part1.csv.gz")
+    dfB = get_file_with_cache("ESM_C_600m_human_embeddings_part2.csv.gz")
+    combined_df = pd.concat([dfA, dfB], ignore_index=True)  # Combine both
+    return combined_df
+  
 #get download for predicting on everything
 def get_download_button(X, y, all_embeddings, name):
     #create a genome-wide ranking by training on the target genes
@@ -58,11 +60,11 @@ def get_download_button(X, y, all_embeddings, name):
 
 #copies are needed because it gets modified - helps with cacheing
 all_embeddings = get_split_embeddings().copy()
-embedding_UMAP = get_file_with_cache("ESM_C_300m_human_embeddings_mean_gene_symbol.UMAP.csv").copy()
+embedding_UMAP = get_file_with_cache("ESM_C_600m_human_embeddings_mean_gene_symbol.UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 
 
-st.sidebar.write("""### ESM C 300M embedding probe tool by Leon French
+st.sidebar.write("""### ESM C 600M embedding probe tool by Leon French
 
 The ESM Cambrian based embeddings the human proteins was generated using the ESM SDK. Details about the ESM C models is available in the [blog post](https://www.evolutionaryscale.ai/blog/esm-cambrian) by Evolutionary Scale and their [github repository](https://github.com/evolutionaryscale/esm). 
 
