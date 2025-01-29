@@ -1,3 +1,4 @@
+#TODO - add strand
 library(tidyr)
 library(readr)
 library(org.Hs.eg.db)
