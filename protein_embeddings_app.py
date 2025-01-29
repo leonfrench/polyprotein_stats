@@ -231,8 +231,9 @@ if len(target_genes) >= n_splits*2:
           X_proportions_test = X_proportions.iloc[test_idx, :]
           
           #Gene locations
-          X_loc_train, X_loc_test = X_locations.iloc[train_idx, :], X_locations.iloc[test_idx, :]
-          
+          X_loc_train = X_locations.iloc[train_idx, :]
+          X_loc_test = X_locations.iloc[test_idx, :]
+
           y_train = y.iloc[train_idx]
           y_test = y.iloc[test_idx]
 
@@ -319,6 +320,7 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
     get_download_button(X, y, all_embeddings, "embeddings")
     #input, X, y, n_jobs, all_embeddings, name
     get_download_button(X_proportions, y, all_embeddings, "proportions")
+    get_download_button(X_locations, y, all_embeddings, "locations")
 
     
 else:
