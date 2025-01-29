@@ -129,9 +129,11 @@ all_embeddings = all_embeddings[all_embeddings['gene_symbol'].isin(background_ge
 embedding_UMAP = embedding_UMAP[embedding_UMAP['gene_symbol'].isin(background_genes_found)]
 proportions = proportions[proportions['gene_symbol'].isin(background_genes_found)]
 gene_locations = gene_locations[gene_locations['gene_symbol'].isin(background_genes_found)]
-#print(all_embeddings.shape)
-#print(embedding_UMAP.shape)
-#print(proportions.shape)
+
+# print(all_embeddings.shape)
+# print(embedding_UMAP.shape)
+# print(proportions.shape)
+# print(gene_locations.shape)
 
 
 #ensure same order so the folds and targets line up
@@ -212,6 +214,14 @@ if len(target_genes) >= n_splits*2:
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_locations = gene_locations.drop(['classification_target', 'gene_symbol'], axis=1)
 
+    # Add StandardScaler for gene locations
+    scaler = StandardScaler()
+    X_locations_scaled = pd.DataFrame(
+        scaler.fit_transform(X_locations),
+        columns=X_locations.columns,
+        index=X_locations.index
+    )
+
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
@@ -231,9 +241,9 @@ if len(target_genes) >= n_splits*2:
           X_proportions_test = X_proportions.iloc[test_idx, :]
           
           #Gene locations
-          X_loc_train = X_locations.iloc[train_idx, :]
-          X_loc_test = X_locations.iloc[test_idx, :]
-
+          X_loc_train = X_locations_scaled.iloc[train_idx, :]
+          X_loc_test = X_locations_scaled.iloc[test_idx, :]
+          
           y_train = y.iloc[train_idx]
           y_test = y.iloc[test_idx]
 
@@ -271,7 +281,8 @@ if len(target_genes) >= n_splits*2:
           #run the model again with gene locations instead of embeddings
           model.fit(X_loc_train, y_train)
           probas = pd.DataFrame(model.predict_proba(X_loc_test), columns=model.classes_)
-          auc_scores_locations.append(roc_auc_score(y_test, probas[True]))
+          auc = roc_auc_score(y_test, probas[True])
+          auc_scores_locations.append(auc)
 
         
     best_predicted_genes = set(best_predicted_genes)
