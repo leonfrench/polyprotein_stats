@@ -60,6 +60,7 @@ def get_download_button(X, y, all_embeddings, name):
 all_embeddings = get_split_embeddings().copy()
 embedding_UMAP = get_file_with_cache("hic_gene_gw_none_by_allbins_max_10kbp.UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
+gene_locations = get_file_with_cache("gene_symbol_locations.csv").copy()
 
 
 st.sidebar.write("""### Global high-density chromatin interaction network probe tool by Leon French
@@ -99,7 +100,10 @@ Source code is on [github](https://github.com/leonfrench/polyprotein_stats)
 
 target_genes = target_genes.splitlines()
 
-background_matrices_genes = set(all_embeddings['gene_symbol']).intersection(proportions['gene_symbol'])
+background_matrices_genes = set(all_embeddings['gene_symbol']).intersection(
+    proportions['gene_symbol'], gene_locations['gene_symbol']
+)
+
 
 if (background_genes == ""):
   background_genes = background_matrices_genes
@@ -118,10 +122,13 @@ background_genes_found =  background_genes.intersection(background_matrices_gene
 all_embeddings['classification_target'] = all_embeddings['gene_symbol'].isin(target_genes_found)
 embedding_UMAP['classification_target'] = embedding_UMAP['gene_symbol'].isin(target_genes_found)
 proportions['classification_target'] = proportions['gene_symbol'].isin(target_genes_found)
+gene_locations['classification_target'] = gene_locations['gene_symbol'].isin(target_genes_found)
+  
   
 all_embeddings = all_embeddings[all_embeddings['gene_symbol'].isin(background_genes_found)]
 embedding_UMAP = embedding_UMAP[embedding_UMAP['gene_symbol'].isin(background_genes_found)]
 proportions = proportions[proportions['gene_symbol'].isin(background_genes_found)]
+gene_locations = gene_locations[gene_locations['gene_symbol'].isin(background_genes_found)]
 #print(all_embeddings.shape)
 #print(embedding_UMAP.shape)
 #print(proportions.shape)
@@ -130,6 +137,7 @@ proportions = proportions[proportions['gene_symbol'].isin(background_genes_found
 #ensure same order so the folds and targets line up
 all_embeddings = all_embeddings.sort_values('gene_symbol')
 proportions = proportions.sort_values('gene_symbol')
+gene_locations = gene_locations.sort_values('gene_symbol')
 
 
 st.write("""
@@ -202,29 +210,32 @@ if len(target_genes) >= n_splits*2:
     
     X = all_embeddings.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
-    
+    X_locations = gene_locations.drop(['classification_target', 'gene_symbol'], axis=1)
+
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
     
     auc_scores = []
     auprc_scores = []
     auc_scores_proportions = []
+    auc_scores_locations = []
     
     with st.spinner('Please wait...'):
       for i, (train_idx, test_idx) in enumerate(skf.split(X, y)):
         
           X_train = X.iloc[train_idx, :]
-          y_train = y.iloc[train_idx]
           X_test = X.iloc[test_idx, :]
-          y_test = y.iloc[test_idx]
           
           #st.write("fold:" + str(i))
-          
           X_proportions_train = X_proportions.iloc[train_idx, :]
           X_proportions_test = X_proportions.iloc[test_idx, :]
+          
+          #Gene locations
+          X_loc_train, X_loc_test = X_locations.iloc[train_idx, :], X_locations.iloc[test_idx, :]
+          
           y_train = y.iloc[train_idx]
           y_test = y.iloc[test_idx]
-      
+
           #st.write("fold after mem:" + str(i))
           
           model = LogisticRegression()
@@ -245,17 +256,22 @@ if len(target_genes) >= n_splits*2:
           auc_scores.append(auc)
           #track the gene with the max prediction for the true class
           best_predicted_genes.append(all_embeddings.iloc[test_idx[probas.idxmax()[True]],:]['gene_symbol'])
-  
+
+          #area under precision recall curve
+          auprc = average_precision_score(y_test, probas[True])
+          auprc_scores.append(auprc)
+
           #run the model again with proportions instead of embeddings
           model.fit(X_proportions_train, y_train)
           probas = pd.DataFrame(model.predict_proba(X_proportions_test), columns=model.classes_)
           auc = roc_auc_score(y_test, probas[True])
           auc_scores_proportions.append(auc)
 
-          #area under precision recall curve
-          auprc = average_precision_score(y_test, probas[True])
-          auprc_scores.append(auprc)
-        
+          #run the model again with gene locations instead of embeddings
+          model.fit(X_loc_train, y_train)
+          probas = pd.DataFrame(model.predict_proba(X_loc_test), columns=model.classes_)
+          auc_scores_locations.append(roc_auc_score(y_test, probas[True]))
+
         
     best_predicted_genes = set(best_predicted_genes)
     top_predicted_hits = best_predicted_genes.intersection(target_genes)
@@ -271,6 +287,7 @@ if len(target_genes) >= n_splits*2:
                 'AUC standard dev': np.std(auc_scores),
                 'gain over proportions' : np.mean(auc_scores)-np.mean(auc_scores_proportions),
                 'AUC_p_value versus 0.5' : scistats.ttest_1samp(auc_scores, 0.5).pvalue, #two sided p-value testing the AUC values against 0.5 expecation
+                'AUC gene locations': np.mean(auc_scores_locations),
                 'AUC proportions': np.mean(auc_scores_proportions),
                 'AUC proportions p_value versus 0.5' : scistats.ttest_1samp(auc_scores_proportions, 0.5).pvalue, #two sided p-value testing the AUC values against 0.5 expecation
                 'AUC proportions vrs embeddings pvalue' : scistats.ttest_rel(auc_scores, auc_scores_proportions).pvalue,
@@ -288,6 +305,8 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
 
     st.markdown(f"Using proportions and length alone, the average AUC is **{measures['AUC proportions']:.2f}**.")
 
+    st.markdown(f"Using genomic locations alone, the average AUC is **{measures['AUC gene locations']:.2f}**.")
+    
     st.markdown(f"Using the learned embeddings (see sidepanel for details), the average AUC is **{measures['AUC']:.2f}**.")
     
     st.markdown(f"Testing if the embedding based AUC values for the {n_splits} folds deviate from the expected 0.5 reveals a p-value of **{measures['AUC_p_value versus 0.5']:.2g}**.")    
