@@ -1,3 +1,4 @@
+#use python version 3.10 in streamlit
 import gc
 import time
 import seaborn as sns
