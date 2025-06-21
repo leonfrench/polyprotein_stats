@@ -65,7 +65,7 @@ proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy
 
 st.sidebar.write("""### Probe tool for shared embeddings from protT5, Orthrus, and scGPT by Leon French
 
-This a combination of embeddings from [ProtT5 by Elnaggar et al.](https://pubmed.ncbi.nlm.nih.gov/34232869/), [scGPT  by Cui et al.](https://www.nature.com/articles/s41592-024-02201-0), and [Orthrus by Fradkin et al.](https://philechka.com/science/orthrus).
+This a combination of embeddings from [ProtT5 by Elnaggar et al.](https://pubmed.ncbi.nlm.nih.gov/34232869/), [scGPT  by Cui et al.](https://www.nature.com/articles/s41592-024-02201-0), and [Orthrus by Fradkin et al.](https://philechka.com/science/orthrus). Specifically, it uses the 100 shared dimensions identified through Canonical Correlation Analysis (CCA).
 
 The default gene list is from the [Lindbohm et al.](https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.12419) study of cognitive decline and risk of dementia.
 , 
