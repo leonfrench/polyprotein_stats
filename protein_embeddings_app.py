@@ -339,6 +339,7 @@ st.markdown(
     """
 <style>
 .gene-prop-table-wrapper { width: 100%; overflow-x: scroll; scrollbar-width: auto; }
+.gene-prop-table-wrapper::-webkit-scrollbar { height: 13px; }
 .gene-prop-table-wrapper::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.3); border-radius: 6px; }
 .gene-prop-table-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.08); }
 table.gene-prop-table { width: 100%; table-layout: auto; }
