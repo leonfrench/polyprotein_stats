@@ -52,6 +52,12 @@ multifunctional_go = get_file_with_cache("multifunctional.GO_2025.csv").copy()
 multifunctional_go = multifunctional_go.rename(columns={'Gene': 'gene_symbol'})
 shared_dim1 = get_file_with_cache("GCCA_shared_embedding.center_and_normalize_False.dim_1.csv").copy()
 gc_content = get_file_with_cache("GC_content.csv").copy()
+inflammatome_rank = get_file_with_cache("Cort_et_al.inflammatome.all_constrasts.csv").copy()
+inflammatome_rank['rank'] = pd.to_numeric(inflammatome_rank['rank'], errors='coerce')
+inflammatome_rank = inflammatome_rank.dropna(subset=['gene_symbol', 'rank'])
+inflammatome_rank = inflammatome_rank.sort_values('rank').drop_duplicates(subset=['gene_symbol'], keep='first')
+# Lower rank means higher inflammatome signal; negate so AUROC direction is intuitive.
+inflammatome_rank['inflammatome_score'] = -inflammatome_rank['rank']
 if 'gene_symbol' not in shared_dim1.columns:
     shared_dim1 = shared_dim1.rename(columns={shared_dim1.columns[0]: 'gene_symbol'})
 if 'dim1' not in shared_dim1.columns and len(shared_dim1.columns) > 1:
@@ -86,6 +92,7 @@ st.sidebar.markdown(
     <li>Is there a detectable signal in a <strong>learned 1D representation</strong>?</li>
     <li>Do the corresponding proteins tend to have <strong>higher abundance</strong>?</li>
     <li>Are the genes <strong>more GC-rich</strong> than expected?</li>
+    <li>Do they skew toward a <strong>high inflammatome signal</strong>?</li>
     <li>Can <strong>amino acid composition + length</strong> separate the input proteins from the rest of the proteome?</li>
     <li>Can simple <strong>genomic location embeddings</strong> separate the input genes from the background?</li>
   </ul>
@@ -152,6 +159,7 @@ multifunctional_go_full = multifunctional_go.copy()
 shared_dim1_full = shared_dim1.copy()
 paxdb_abundance_full = paxdb_abundance.copy()
 gc_content_full = gc_content.copy()
+inflammatome_rank_full = inflammatome_rank.copy()
   
 proportions = proportions[proportions['gene_symbol'].isin(background_genes_found)]
 gene_locations = gene_locations[gene_locations['gene_symbol'].isin(background_genes_found)]
@@ -182,6 +190,7 @@ if background_genes_input is None:
   table_shared_dim1 = shared_dim1_full.copy()
   table_paxdb_abundance = paxdb_abundance_full.copy()
   table_gc_content = gc_content_full.copy()
+  table_inflammatome_rank = inflammatome_rank_full.copy()
 else:
   table_proportions = proportions_full[proportions_full['gene_symbol'].isin(background_genes_input)].copy()
   table_avg_bulk_cpm = avg_bulk_cpm_full[avg_bulk_cpm_full['gene_symbol'].isin(background_genes_input)].copy()
@@ -190,6 +199,7 @@ else:
   table_shared_dim1 = shared_dim1_full[shared_dim1_full['gene_symbol'].isin(background_genes_input)].copy()
   table_paxdb_abundance = paxdb_abundance_full[paxdb_abundance_full['gene_symbol'].isin(background_genes_input)].copy()
   table_gc_content = gc_content_full[gc_content_full['gene_symbol'].isin(background_genes_input)].copy()
+  table_inflammatome_rank = inflammatome_rank_full[inflammatome_rank_full['gene_symbol'].isin(background_genes_input)].copy()
 
 table_avg_bulk_cpm_protein = avg_bulk_cpm_full[
     avg_bulk_cpm_full['gene_symbol'].isin(proportions_full['gene_symbol'])
@@ -207,6 +217,7 @@ table_multifunctional_go['classification_target'] = table_multifunctional_go['ge
 table_shared_dim1['classification_target'] = table_shared_dim1['gene_symbol'].isin(target_genes)
 table_paxdb_abundance['classification_target'] = table_paxdb_abundance['gene_symbol'].isin(target_genes)
 table_gc_content['classification_target'] = table_gc_content['gene_symbol'].isin(target_genes)
+table_inflammatome_rank['classification_target'] = table_inflammatome_rank['gene_symbol'].isin(target_genes)
 
 #tag on length AUC value, could just be printed
 auc_for_length, p_for_length, pos_length, total_length = get_auc_and_pvalue(table_proportions, 'length')
@@ -234,6 +245,10 @@ auc_for_paxdb, p_for_paxdb, pos_paxdb, total_paxdb = get_auc_and_pvalue(
 auc_for_gc_content, p_for_gc_content, pos_gc_content, total_gc_content = get_auc_and_pvalue(
     table_gc_content,
     'gc_content'
+)
+auc_for_inflammatome, p_for_inflammatome, pos_inflammatome, total_inflammatome = get_auc_and_pvalue(
+    table_inflammatome_rank,
+    'inflammatome_score'
 )
 aa_summary_df = pd.DataFrame(
     [
@@ -304,6 +319,14 @@ aa_summary_df = pd.DataFrame(
             'pvalue': p_for_gc_content,
             'Target genes used': pos_gc_content,
             'Number total genes': total_gc_content
+        },
+        {
+            'Name': 'Inflammatome rank',
+            'Source': '<a href="https://www.cell.com/cell-reports/fulltext/S2211-1247(25)01655-9" target="_blank">Cort et al.</a>',
+            'AUROC': auc_for_inflammatome,
+            'pvalue': p_for_inflammatome,
+            'Target genes used': pos_inflammatome,
+            'Number total genes': total_inflammatome
         },
     ]
 ).sort_values('AUROC', ascending=False)
