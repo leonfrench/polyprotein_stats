@@ -36,9 +36,15 @@ def get_auc_and_pvalue(df, value_col):
     if y.nunique() < 2:
         return float("nan"), float("nan"), int(y.sum()), int(len(y))
     auc = roc_auc_score(y, df[value_col])
-    neg = df[y == 0]
-    pos = df[y == 1]
-    pvalue = scistats.mannwhitneyu(neg[value_col].tolist(), pos[value_col].tolist()).pvalue
+    neg_values = df.loc[y == 0, value_col].dropna()
+    pos_values = df.loc[y == 1, value_col].dropna()
+    if len(neg_values) < 2 or len(pos_values) < 2:
+        return auc, float("nan"), int(y.sum()), int(len(y))
+    pvalue = scistats.mannwhitneyu(
+        neg_values.tolist(),
+        pos_values.tolist(),
+        alternative='two-sided',
+    ).pvalue
     return auc, pvalue, int(y.sum()), int(len(y))
 
 #copies are needed because it gets modified - helps with cacheing
