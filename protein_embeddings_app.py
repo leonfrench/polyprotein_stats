@@ -13,6 +13,7 @@ from scipy import stats as scistats
 
 st.set_page_config(layout="wide")
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
+MIN_POSITIVE_FLOAT = np.nextafter(0.0, 1.0)
 
 #cache the file loading to speed things up
 @st.cache_data
@@ -45,7 +46,19 @@ def get_auc_and_pvalue(df, value_col):
         pos_values.tolist(),
         alternative='two-sided',
     ).pvalue
+    # scipy can underflow to 0 for extremely small p-values; display the smallest
+    # positive float instead so the UI never shows an impossible p-value of 0.
+    pvalue = max(float(pvalue), MIN_POSITIVE_FLOAT)
     return auc, pvalue, int(y.sum()), int(len(y))
+
+
+def prepare_single_feature_table(df, source_col, feature_name=None):
+    feature_name = feature_name or source_col
+    feature_df = df[['gene_symbol', source_col]].copy()
+    feature_df[source_col] = pd.to_numeric(feature_df[source_col], errors='coerce')
+    feature_df = feature_df.dropna(subset=['gene_symbol', source_col])
+    feature_df = feature_df.drop_duplicates(subset=['gene_symbol'], keep='first')
+    return feature_df.rename(columns={source_col: feature_name})
 
 #copies are needed because it gets modified - helps with cacheing
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
@@ -225,6 +238,35 @@ table_paxdb_abundance['classification_target'] = table_paxdb_abundance['gene_sym
 table_gc_content['classification_target'] = table_gc_content['gene_symbol'].isin(target_genes)
 table_inflammatome_rank['classification_target'] = table_inflammatome_rank['gene_symbol'].isin(target_genes)
 
+# Shared-dim1 is intentionally excluded for this combined ranking model.
+ranking_feature_specs = [
+    ('length', table_proportions, 'length'),
+    ('avg_bulk_CPM', table_avg_bulk_cpm, 'avg_bulk_CPM'),
+    ('DE_Prior_Rank', table_de_prior_rank, 'DE_Prior_Rank'),
+    ('MF.score', table_multifunctional_go, 'MF.score'),
+    ('abundance', table_paxdb_abundance, 'abundance'),
+    ('gc_content', table_gc_content, 'gc_content'),
+    ('inflammatome_score', table_inflammatome_rank, 'inflammatome_score'),
+]
+
+table_rankings_intersection = None
+for feature_name, source_df, source_col in ranking_feature_specs:
+    feature_table = prepare_single_feature_table(
+        source_df,
+        source_col=source_col,
+        feature_name=feature_name
+    )
+    if table_rankings_intersection is None:
+        table_rankings_intersection = feature_table
+    else:
+        table_rankings_intersection = table_rankings_intersection.merge(
+            feature_table,
+            on='gene_symbol',
+            how='inner'
+        )
+
+table_rankings_intersection['classification_target'] = table_rankings_intersection['gene_symbol'].isin(target_genes)
+
 #tag on length AUC value, could just be printed
 auc_for_length, p_for_length, pos_length, total_length = get_auc_and_pvalue(table_proportions, 'length')
 auc_for_cpm, p_for_cpm, pos_cpm, total_cpm = get_auc_and_pvalue(table_avg_bulk_cpm, 'avg_bulk_CPM')
@@ -396,6 +438,8 @@ if len(target_genes) >= n_splits*2:
     
     X_proportions = proportions.drop(['classification_target', 'gene_symbol'], axis = 1)
     X_locations = gene_locations.drop(['classification_target', 'gene_symbol'], axis=1)
+    y_rankings = table_rankings_intersection['classification_target']
+    X_rankings = table_rankings_intersection.drop(['classification_target', 'gene_symbol'], axis=1)
 
     # Add StandardScaler for gene locations
     scaler = StandardScaler()
@@ -404,6 +448,14 @@ if len(target_genes) >= n_splits*2:
         columns=X_locations.columns,
         index=X_locations.index
     )
+    X_rankings_scaled = pd.DataFrame()
+    if len(X_rankings) > 0:
+        scaler_rankings = StandardScaler()
+        X_rankings_scaled = pd.DataFrame(
+            scaler_rankings.fit_transform(X_rankings),
+            columns=X_rankings.columns,
+            index=X_rankings.index
+        )
 
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
@@ -412,6 +464,7 @@ if len(target_genes) >= n_splits*2:
     auprc_scores = []
     auc_scores_proportions = []
     auc_scores_locations = []
+    auc_scores_rankings = []
     
     with st.spinner('Please wait...'):
       for i, (train_idx, test_idx) in enumerate(skf.split(X_proportions, y)):
@@ -456,6 +509,20 @@ if len(target_genes) >= n_splits*2:
           auc = roc_auc_score(y_test, probas[True])
           auc_scores_locations.append(auc)
 
+    if len(X_rankings_scaled) > 0 and y_rankings.sum() >= n_splits*2 and (~y_rankings).sum() >= n_splits*2:
+      skf_rankings = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
+      with st.spinner('Please wait...'):
+        for train_idx, test_idx in skf_rankings.split(X_rankings_scaled, y_rankings):
+            X_rankings_train = X_rankings_scaled.iloc[train_idx, :]
+            X_rankings_test = X_rankings_scaled.iloc[test_idx, :]
+            y_rankings_train = y_rankings.iloc[train_idx]
+            y_rankings_test = y_rankings.iloc[test_idx]
+
+            model = LogisticRegression()
+            model.fit(X_rankings_train, y_rankings_train)
+            probas = pd.DataFrame(model.predict_proba(X_rankings_test), columns=model.classes_)
+            auc = roc_auc_score(y_rankings_test, probas[True])
+            auc_scores_rankings.append(auc)
         
     best_predicted_genes = set(best_predicted_genes)
     top_predicted_hits = best_predicted_genes.intersection(target_genes)
@@ -470,6 +537,9 @@ if len(target_genes) >= n_splits*2:
                 'AUC proportions': np.mean(auc_scores_proportions),
                 'AUC proportions standard dev': np.std(auc_scores_proportions),
                 'AUC gene locations': np.mean(auc_scores_locations),
+                'AUC all background rankings (no shared dim1)': np.mean(auc_scores_rankings) if len(auc_scores_rankings) else float("nan"),
+                'number_of_used_genes_all_rankings_intersection': len(table_rankings_intersection),
+                'number_of_target_genes_all_rankings_intersection': int(y_rankings.sum()),
                 'AUC proportions p_value versus 0.5' : scistats.ttest_1samp(auc_scores_proportions, 0.5).pvalue, #two sided p-value testing the AUC values against 0.5 expecation
                 'AUC locations vrs proportions pvalue' : scistats.ttest_rel(auc_scores_locations, auc_scores_proportions).pvalue}
 
@@ -485,6 +555,19 @@ L2 loss, sklearn default parameters) that attempts to classify proteins as belon
     st.markdown(f"Using amino acid composition and length alone, the average AUC is **{measures['AUC proportions']:.2f}**.")
 
     st.markdown(f"Using genomic locations alone, the average AUC is **{measures['AUC gene locations']:.2f}**.")
+
+    if np.isfinite(measures['AUC all background rankings (no shared dim1)']):
+        st.markdown(
+            "Using the intersection of all first-table background rankings "
+            "(excluding Shared 1D representation), the average AUC is "
+            f"**{measures['AUC all background rankings (no shared dim1)']:.2f}**."
+        )
+    else:
+        st.markdown(
+            "Using the intersection of all first-table background rankings "
+            "(excluding Shared 1D representation), there are too few genes to run "
+            "4-fold cross-validation."
+        )
 
     with st.expander("More statistics from the classification tests"):
         st.write(measures)
