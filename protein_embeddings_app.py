@@ -16,8 +16,13 @@ from sklearn.preprocessing import StandardScaler
 
 from scipy import stats as scistats
 from statsmodels.stats import multitest
-import bokeh.io
-import bokeh.plotting
+try:
+    from bokeh.plotting import figure
+    has_bokeh = True
+    bokeh_import_error = None
+except Exception as e:
+    has_bokeh = False
+    bokeh_import_error = e
 
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
@@ -61,6 +66,7 @@ def get_download_button(X, y, all_embeddings, name):
 all_embeddings = get_split_embeddings().copy()
 embedding_UMAP = get_file_with_cache("GCCA_shared_embedding.center_and_normalize_False.dim_100.UMAP.csv").copy()
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
+protein_neighborhoods = get_file_with_cache("protein_neighborhoods_gene_to_cluster_wide.csv.gz").copy()
 
 
 st.sidebar.write("""### Probe tool for shared embeddings from protT5, Orthrus, and scGPT by Leon French
@@ -313,6 +319,7 @@ st.write("""#### Embedding visualization
 The below plot shows the UMAP visualization of the embeddings of the input (red, target=true on hover) and background proteins (grey). The blue dots mark top predicted 
 proteins for each fold of the classification model (also top_predicted_hits_in_folds in the above dictionary). These predicted genes may help understand what the classifier is learning from the input proteins. 
 You can zoom and pan using the sidebar buttons. 
+An interactive version of this UMAP is available at [protein-neighborhoods](https://leonfrench.github.io/protein-neighborhoods/).
 
 """)
 
@@ -320,33 +327,96 @@ You can zoom and pan using the sidebar buttons.
 
 x='UMAP 0'
 y='UMAP 1'
-p = bokeh.plotting.figure(
-    width=720,
-    height=480,
-    x_axis_label=x,
-    y_axis_label=y,
-    active_scroll="wheel_zoom",
-    tooltips=[
-        ("Gene", "@{gene_symbol}"),('Target', '@{classification_target}')
-    ],
-)
-p.circle(
-    source=embedding_UMAP[embedding_UMAP['classification_target'] == False], 
-    x=x, y=y,
-    fill_color='lightgrey', line_color = 'lightgrey'
-)
-#top 5 genes from the predictors, one for each fold
-p.circle(
-    source=embedding_UMAP[embedding_UMAP['gene_symbol'].isin(best_predicted_genes)], 
-    x=x, y=y,
-    fill_color='blue', line_color = 'blue'
-)
-p.circle(
-    source=embedding_UMAP[embedding_UMAP['classification_target'] == True], 
-    x=x, y=y,
-    fill_color='red', line_color = 'red'
-)
-st.bokeh_chart(p, use_container_width=True)
+if has_bokeh:
+    p = figure(
+        width=720,
+        height=480,
+        x_axis_label=x,
+        y_axis_label=y,
+        active_scroll="wheel_zoom",
+        tooltips=[
+            ("Gene", "@{gene_symbol}"),('Target', '@{classification_target}')
+        ],
+    )
+    p.circle(
+        source=embedding_UMAP[embedding_UMAP['classification_target'] == False], 
+        x=x, y=y,
+        fill_color='lightgrey', line_color = 'lightgrey'
+    )
+    #top 5 genes from the predictors, one for each fold
+    p.circle(
+        source=embedding_UMAP[embedding_UMAP['gene_symbol'].isin(best_predicted_genes)], 
+        x=x, y=y,
+        fill_color='blue', line_color = 'blue'
+    )
+    p.circle(
+        source=embedding_UMAP[embedding_UMAP['classification_target'] == True], 
+        x=x, y=y,
+        fill_color='red', line_color = 'red'
+    )
+    st.bokeh_chart(p, use_container_width=True)
+else:
+    st.warning(
+        "Embedding visualization skipped because Bokeh could not be imported in this environment "
+        f"({bokeh_import_error})."
+    )
 
 
 
+st.write("""#### Protein neighborhood cluster enrichment
+
+The table below tests enrichment of the target genes in each protein neighborhood cluster using a
+hypergeometric test, with the selected background genes as the population.
+Cluster definitions come from [protein-neighborhoods](https://leonfrench.github.io/protein-neighborhoods/).
+
+""")
+
+protein_neighborhoods = protein_neighborhoods.drop_duplicates(subset='gene_symbol')
+protein_neighborhoods = protein_neighborhoods[protein_neighborhoods['gene_symbol'].isin(background_genes_found)]
+
+if protein_neighborhoods.shape[0] == 0:
+    st.write("No background genes overlap the neighborhood matrix, so enrichment could not be computed.")
+else:
+    cluster_columns = [col for col in protein_neighborhoods.columns if col != 'gene_symbol']
+    neighborhood_matrix = protein_neighborhoods[cluster_columns].to_numpy(dtype=np.int8, copy=False)
+    target_vector = protein_neighborhoods['gene_symbol'].isin(target_genes_found).to_numpy(dtype=np.int8)
+
+    overlap_sizes = target_vector @ neighborhood_matrix
+    cluster_sizes = neighborhood_matrix.sum(axis=0)
+
+    population_size = protein_neighborhoods.shape[0]
+    target_size = int(target_vector.sum())
+
+    expected_overlap = (cluster_sizes * target_size) / population_size
+    fold_enrichment = np.divide(
+        overlap_sizes,
+        expected_overlap,
+        out=np.full(expected_overlap.shape, np.nan, dtype=float),
+        where=expected_overlap > 0
+    )
+
+    pvalues = scistats.hypergeom.sf(overlap_sizes - 1, population_size, cluster_sizes, target_size)
+    pvalues_bh = multitest.multipletests(pvalues, method="fdr_bh")[1]
+
+    cluster_enrichment_df = pd.DataFrame({
+        'cluster': cluster_columns,
+        'overlap_with_targets': overlap_sizes.astype(int),
+        'cluster_size': cluster_sizes.astype(int),
+        'target_size': target_size,
+        'fold_enrichment': fold_enrichment,
+        'pvalue': pvalues,
+        'pvalue_fdr': pvalues_bh
+    })
+
+    cluster_enrichment_df = cluster_enrichment_df[
+        cluster_enrichment_df['cluster_size'] > 0
+    ].sort_values(['pvalue', 'overlap_with_targets'], ascending=[True, False])
+
+    cluster_enrichment_df.reset_index(inplace=True, drop=True)
+    cluster_enrichment_df.index = [""] * len(cluster_enrichment_df)
+
+    st.write(cluster_enrichment_df.style.format({
+        'fold_enrichment': "{:.2f}",
+        'pvalue': "{:.2g}",
+        'pvalue_fdr': "{:.2g}"
+    }))
