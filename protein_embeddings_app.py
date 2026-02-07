@@ -379,10 +379,21 @@ if protein_neighborhoods.shape[0] == 0:
 else:
     cluster_columns = [col for col in protein_neighborhoods.columns if col != 'gene_symbol']
     neighborhood_matrix = protein_neighborhoods[cluster_columns].to_numpy(dtype=np.int8, copy=False)
+    gene_symbols = protein_neighborhoods['gene_symbol'].to_numpy()
     target_vector = protein_neighborhoods['gene_symbol'].isin(target_genes_found).to_numpy(dtype=np.int8)
+    target_mask = target_vector.astype(bool)
 
     overlap_sizes = target_vector @ neighborhood_matrix
     cluster_sizes = neighborhood_matrix.sum(axis=0)
+
+    overlap_genes = []
+    for idx, overlap_size in enumerate(overlap_sizes):
+        if 0 < overlap_size < 10:
+            overlap_mask = target_mask & neighborhood_matrix[:, idx].astype(bool)
+            overlap_gene_symbols = sorted(gene_symbols[overlap_mask].tolist())
+            overlap_genes.append(", ".join(overlap_gene_symbols))
+        else:
+            overlap_genes.append("")
 
     population_size = protein_neighborhoods.shape[0]
     target_size = int(target_vector.sum())
@@ -405,7 +416,9 @@ else:
         'target_size': target_size,
         'fold_enrichment': fold_enrichment,
         'pvalue': pvalues,
-        'pvalue_fdr': pvalues_bh
+        'pvalue_fdr': pvalues_bh,
+        'overlapping_genes': overlap_genes
+
     })
 
     cluster_enrichment_df = cluster_enrichment_df[
