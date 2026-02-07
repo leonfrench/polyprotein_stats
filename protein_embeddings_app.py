@@ -130,7 +130,7 @@ sequence_input = "CDCP1\nCHRDL1\nGDF15\nGM2A\nIGFBP7\nMARCKSL1\nNPPB\nPLA2G2A\nR
 target_genes = st.sidebar.text_area("Target gene list", sequence_input, height=100)
 
 #background_genes = st.sidebar.text_area("Background genes - leave blank for all protein coding genes", "SMAD1\nFKBP5\nMT-CO3\nARHGEF3\nNEAT1\nMT-ND4\nMT-ND3\nTENM4\nHSPA1A\nHMGB1\nCADPS\nCLIC4\nMT-ATP6\nOSBPL1A\nNRXN3\nTPST1\nCD44\nATP9A\nHSPB1\nSLC7A11\nPTGES3", height=100)
-background_genes = st.sidebar.text_area("Background genes (optional)", "", height=100)
+background_genes = st.sidebar.text_area("Background genes (recommended)", "", height=100)
 
 st.sidebar.markdown("Source code is on [github](https://github.com/leonfrench/polyprotein_stats/tree/generic_tester).")
 st.sidebar.markdown(
