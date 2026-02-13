@@ -24,6 +24,25 @@ except Exception as e:
     has_bokeh = False
     bokeh_import_error = e
 
+st.set_page_config(layout="wide")
+st.markdown(
+    """
+<style>
+.main .block-container {
+    max-width: 95%;
+}
+.gene-prop-table-wrapper { width: 100%; overflow-x: scroll; scrollbar-width: auto; }
+.gene-prop-table-wrapper::-webkit-scrollbar { height: 13px; }
+.gene-prop-table-wrapper::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.3); border-radius: 6px; }
+.gene-prop-table-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.08); }
+table.gene-prop-table { width: 100%; table-layout: auto; }
+table.gene-prop-table th, table.gene-prop-table td { white-space: nowrap; }
+table.gene-prop-table th { text-align: left; }
+</style>
+""",
+    unsafe_allow_html=True
+)
+
 embedding_file_path_processed = os.path.join(os.path.dirname(__file__), 'data', 'processed')
 
 #cache the file loading to speed things up
