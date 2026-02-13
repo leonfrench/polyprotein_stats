@@ -388,12 +388,12 @@ else:
 
     overlap_genes = []
     for idx, overlap_size in enumerate(overlap_sizes):
-        if 0 < overlap_size < 10:
+        if 0 < overlap_size < 16:
             overlap_mask = target_mask & neighborhood_matrix[:, idx].astype(bool)
             overlap_gene_symbols = sorted(gene_symbols[overlap_mask].tolist())
             overlap_genes.append(", ".join(overlap_gene_symbols))
         else:
-            overlap_genes.append("")
+            overlap_genes.append("Too many to display")
 
     population_size = protein_neighborhoods.shape[0]
     target_size = int(target_vector.sum())
