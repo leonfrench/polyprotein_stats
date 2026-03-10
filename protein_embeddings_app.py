@@ -45,6 +45,7 @@ def get_auc_and_pvalue(df, value_col):
         neg_values.tolist(),
         pos_values.tolist(),
         alternative='two-sided',
+        method = 'asymptotic'
     ).pvalue
     # scipy can underflow to 0 for extremely small p-values; display the smallest
     # positive float instead so the UI never shows an impossible p-value of 0.
