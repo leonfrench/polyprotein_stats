@@ -126,6 +126,7 @@ inflammatome_rank = inflammatome_rank.sort_values('rank').drop_duplicates(subset
 # Lower rank means higher inflammatome signal; negate so AUROC direction is intuitive.
 inflammatome_rank['inflammatome_score'] = -inflammatome_rank['rank']
 homlof_populations = get_file_with_cache("Koch_et_al.homLoF.csv").copy()
+depmap_essential_genes = get_file_with_cache("DepMap.crispr.essential_genes.txt").copy()
 if 'gene_symbol' not in shared_dim1.columns:
     shared_dim1 = shared_dim1.rename(columns={shared_dim1.columns[0]: 'gene_symbol'})
 if 'dim1' not in shared_dim1.columns and len(shared_dim1.columns) > 1:
@@ -162,6 +163,7 @@ st.sidebar.markdown(
     <li>Are the genes <strong>more GC-rich</strong> than expected?</li>
     <li>Do they skew toward a <strong>high inflammatome signal</strong>?</li>
     <li>Are they enriched or depleted for <strong>observed human knockouts</strong>?</li>
+    <li>Are they enriched or depleted for <strong>CRISPR-defined essential genes</strong>?</li>
     <li>Can <strong>amino acid composition + length</strong> separate the input proteins from the rest of the proteome?</li>
     <li>Can simple <strong>genomic location embeddings</strong> separate the input genes from the background?</li>
   </ul>
@@ -230,6 +232,7 @@ paxdb_abundance_full = paxdb_abundance.copy()
 gc_content_full = gc_content.copy()
 inflammatome_rank_full = inflammatome_rank.copy()
 homlof_populations_full = homlof_populations.copy()
+depmap_essential_genes_full = depmap_essential_genes.copy()
   
 proportions = proportions[proportions['gene_symbol'].isin(background_genes_found)]
 gene_locations = gene_locations[gene_locations['gene_symbol'].isin(background_genes_found)]
@@ -350,11 +353,11 @@ auc_for_inflammatome, p_for_inflammatome, pos_inflammatome, total_inflammatome =
     'inflammatome_score'
 )
 if background_genes_input is None:
-    homlof_enrichment_background = set(proportions_full['gene_symbol'].dropna())
-    homlof_background_label = 'protein-coding background'
+    overlap_test_background = set(proportions_full['gene_symbol'].dropna())
+    overlap_background_label = 'protein-coding background'
 else:
-    homlof_enrichment_background = set(background_genes_input)
-    homlof_background_label = 'user-provided background'
+    overlap_test_background = set(background_genes_input)
+    overlap_background_label = 'user-provided background'
 
 (
     homlof_fisher_pvalue,
@@ -366,7 +369,20 @@ else:
 ) = get_gene_set_enrichment_result(
     target_genes=target_genes,
     hit_genes=homlof_populations_full['gene_symbol'],
-    background_genes=homlof_enrichment_background
+    background_genes=overlap_test_background
+)
+
+(
+    depmap_fisher_pvalue,
+    depmap_enrichment_direction,
+    depmap_target_hits,
+    depmap_target_total,
+    depmap_reference_hits,
+    depmap_reference_total
+) = get_gene_set_enrichment_result(
+    target_genes=target_genes,
+    hit_genes=depmap_essential_genes_full['gene_symbol'],
+    background_genes=overlap_test_background
 )
 aa_summary_df = pd.DataFrame(
     [
@@ -496,12 +512,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown("#### Loss-of-function tolerance")
+st.markdown("#### Loss-of-function tolerance and CRISPR essentiality")
 if np.isfinite(homlof_fisher_pvalue):
     homlof_target_percent = 100 * homlof_target_hits / homlof_target_total
     homlof_reference_percent = 100 * homlof_reference_hits / homlof_reference_total
     st.markdown(
-        f"Using the {homlof_background_label}, homozygous carriers of putative "
+        f"Using the {overlap_background_label}, homozygous carriers of putative "
         f"loss-of-function variants were observed for {homlof_target_hits} of "
         f"{homlof_target_total} ({homlof_target_percent:.1f}%) tested input genes, "
         f"compared with {homlof_reference_hits} of {homlof_reference_total} "
@@ -515,8 +531,29 @@ else:
     st.markdown(
         "The enrichment or depletion p-value for genes with homozygous carriers of "
         "putative loss-of-function variants could not be calculated using the "
-        f"{homlof_background_label} because there were too few tested input or "
+        f"{overlap_background_label} because there were too few tested input or "
         "background genes."
+    )
+
+if np.isfinite(depmap_fisher_pvalue):
+    depmap_target_percent = 100 * depmap_target_hits / depmap_target_total
+    depmap_reference_percent = 100 * depmap_reference_hits / depmap_reference_total
+    st.markdown(
+        f"Using the {overlap_background_label}, DepMap CRISPR-defined essential genes "
+        f"included {depmap_target_hits} of {depmap_target_total} "
+        f"({depmap_target_percent:.1f}%) tested input genes, compared with "
+        f"{depmap_reference_hits} of {depmap_reference_total} "
+        f"({depmap_reference_percent:.1f}%) non-target background genes "
+        "[(Meyers et al.)](https://www.nature.com/articles/ng.3984). "
+        f"The observed direction is **{depmap_enrichment_direction}** "
+        "(two-sided Fisher's exact p-value = "
+        f"**{depmap_fisher_pvalue:.2g}**)."
+    )
+else:
+    st.markdown(
+        "The enrichment or depletion p-value for DepMap CRISPR-defined essential "
+        f"genes could not be calculated using the {overlap_background_label} because "
+        "there were too few tested input or background genes."
     )
 
 
