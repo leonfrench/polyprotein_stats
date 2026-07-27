@@ -84,10 +84,10 @@ def get_gene_set_enrichment_result(target_genes, hit_genes, background_genes):
         [target_hits, len(target_set) - target_hits],
         [reference_hits, len(reference_set) - reference_hits]
     ]
-    pvalue = scistats.fisher_exact(
+    _, pvalue = scistats.fisher_exact(
         contingency_table,
         alternative='two-sided'
-    ).pvalue
+    )
     pvalue = max(float(pvalue), MIN_POSITIVE_FLOAT)
     direction_comparison = (
         target_hits * len(reference_set)
