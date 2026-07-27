@@ -61,6 +61,53 @@ def prepare_single_feature_table(df, source_col, feature_name=None):
     feature_df = feature_df.drop_duplicates(subset=['gene_symbol'], keep='first')
     return feature_df.rename(columns={source_col: feature_name})
 
+
+def get_gene_set_enrichment_result(target_genes, hit_genes, background_genes):
+    background_set = set(background_genes)
+    target_set = set(target_genes).intersection(background_set)
+    reference_set = background_set.difference(target_set)
+    hit_set = set(hit_genes).intersection(background_set)
+
+    target_hits = len(target_set.intersection(hit_set))
+    reference_hits = len(reference_set.intersection(hit_set))
+    if not target_set or not reference_set:
+        return (
+            float("nan"),
+            'undetermined',
+            target_hits,
+            len(target_set),
+            reference_hits,
+            len(reference_set)
+        )
+
+    contingency_table = [
+        [target_hits, len(target_set) - target_hits],
+        [reference_hits, len(reference_set) - reference_hits]
+    ]
+    pvalue = scistats.fisher_exact(
+        contingency_table,
+        alternative='two-sided'
+    ).pvalue
+    pvalue = max(float(pvalue), MIN_POSITIVE_FLOAT)
+    direction_comparison = (
+        target_hits * len(reference_set)
+        - reference_hits * len(target_set)
+    )
+    if direction_comparison > 0:
+        direction = 'enrichment'
+    elif direction_comparison < 0:
+        direction = 'depletion'
+    else:
+        direction = 'no directional difference'
+    return (
+        pvalue,
+        direction,
+        target_hits,
+        len(target_set),
+        reference_hits,
+        len(reference_set)
+    )
+
 #copies are needed because it gets modified - helps with cacheing
 proportions = get_file_with_cache("gene_symbol_summarized_proportions.csv").copy()
 gene_locations = get_file_with_cache("gene_symbol_locations.csv").copy()
@@ -78,6 +125,7 @@ inflammatome_rank = inflammatome_rank.dropna(subset=['gene_symbol', 'rank'])
 inflammatome_rank = inflammatome_rank.sort_values('rank').drop_duplicates(subset=['gene_symbol'], keep='first')
 # Lower rank means higher inflammatome signal; negate so AUROC direction is intuitive.
 inflammatome_rank['inflammatome_score'] = -inflammatome_rank['rank']
+homlof_populations = get_file_with_cache("Koch_et_al.homLoF.csv").copy()
 if 'gene_symbol' not in shared_dim1.columns:
     shared_dim1 = shared_dim1.rename(columns={shared_dim1.columns[0]: 'gene_symbol'})
 if 'dim1' not in shared_dim1.columns and len(shared_dim1.columns) > 1:
@@ -113,6 +161,7 @@ st.sidebar.markdown(
     <li>Do the corresponding proteins tend to have <strong>higher abundance</strong>?</li>
     <li>Are the genes <strong>more GC-rich</strong> than expected?</li>
     <li>Do they skew toward a <strong>high inflammatome signal</strong>?</li>
+    <li>Are they enriched or depleted for <strong>observed human knockouts</strong>?</li>
     <li>Can <strong>amino acid composition + length</strong> separate the input proteins from the rest of the proteome?</li>
     <li>Can simple <strong>genomic location embeddings</strong> separate the input genes from the background?</li>
   </ul>
@@ -180,6 +229,7 @@ shared_dim1_full = shared_dim1.copy()
 paxdb_abundance_full = paxdb_abundance.copy()
 gc_content_full = gc_content.copy()
 inflammatome_rank_full = inflammatome_rank.copy()
+homlof_populations_full = homlof_populations.copy()
   
 proportions = proportions[proportions['gene_symbol'].isin(background_genes_found)]
 gene_locations = gene_locations[gene_locations['gene_symbol'].isin(background_genes_found)]
@@ -298,6 +348,25 @@ auc_for_gc_content, p_for_gc_content, pos_gc_content, total_gc_content = get_auc
 auc_for_inflammatome, p_for_inflammatome, pos_inflammatome, total_inflammatome = get_auc_and_pvalue(
     table_inflammatome_rank,
     'inflammatome_score'
+)
+if background_genes_input is None:
+    homlof_enrichment_background = set(proportions_full['gene_symbol'].dropna())
+    homlof_background_label = 'protein-coding background'
+else:
+    homlof_enrichment_background = set(background_genes_input)
+    homlof_background_label = 'user-provided background'
+
+(
+    homlof_fisher_pvalue,
+    homlof_enrichment_direction,
+    homlof_target_hits,
+    homlof_target_total,
+    homlof_reference_hits,
+    homlof_reference_total
+) = get_gene_set_enrichment_result(
+    target_genes=target_genes,
+    hit_genes=homlof_populations_full['gene_symbol'],
+    background_genes=homlof_enrichment_background
 )
 aa_summary_df = pd.DataFrame(
     [
@@ -426,6 +495,25 @@ st.markdown(
     f"<div class=\"gene-prop-table-wrapper\">{table_html}</div>",
     unsafe_allow_html=True
 )
+
+if np.isfinite(homlof_fisher_pvalue):
+    st.markdown(
+        f"Using the {homlof_background_label}, **{homlof_target_hits} of "
+        f"{homlof_target_total}** tested input genes are "
+        "[genes with homozygous carriers of putative loss-of-function variants]"
+        "(https://www.nature.com/articles/s41586-026-10667-5), compared "
+        f"with **{homlof_reference_hits} of {homlof_reference_total}** non-target "
+        f"background genes. The observed direction is **{homlof_enrichment_direction}** "
+        "(two-sided Fisher's exact p-value = "
+        f"**{homlof_fisher_pvalue:.2g}**)."
+    )
+else:
+    st.markdown(
+        "The enrichment or depletion p-value for genes with homozygous carriers of "
+        "putative loss-of-function variants could not be calculated using the "
+        f"{homlof_background_label} because there were too few tested input or "
+        "background genes."
+    )
 
 
 ###classification 
