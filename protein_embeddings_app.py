@@ -523,7 +523,8 @@ if np.isfinite(homlof_fisher_pvalue):
         f"compared with {homlof_reference_hits} of {homlof_reference_total} "
         f"({homlof_reference_percent:.1f}%) non-target background genes "
         "[(Koch et al.)](https://www.nature.com/articles/s41586-026-10667-5). "
-        f"The observed direction is **{homlof_enrichment_direction}** "
+        f"This indicates **{homlof_enrichment_direction} of loss-of-function-tolerant "
+        "genes** in the input gene set relative to the background "
         "(two-sided Fisher's exact p-value = "
         f"**{homlof_fisher_pvalue:.2g}**)."
     )
@@ -545,7 +546,8 @@ if np.isfinite(depmap_fisher_pvalue):
         f"{depmap_reference_hits} of {depmap_reference_total} "
         f"({depmap_reference_percent:.1f}%) non-target background genes "
         "[(Meyers et al.)](https://www.nature.com/articles/ng.3984). "
-        f"The observed direction is **{depmap_enrichment_direction}** "
+        f"This indicates **{depmap_enrichment_direction} of CRISPR-defined essential "
+        "genes** in the input gene set relative to the background "
         "(two-sided Fisher's exact p-value = "
         f"**{depmap_fisher_pvalue:.2g}**)."
     )
