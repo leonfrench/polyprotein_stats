@@ -496,14 +496,18 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown("#### Loss-of-function tolerance")
 if np.isfinite(homlof_fisher_pvalue):
+    homlof_target_percent = 100 * homlof_target_hits / homlof_target_total
+    homlof_reference_percent = 100 * homlof_reference_hits / homlof_reference_total
     st.markdown(
-        f"Using the {homlof_background_label}, **{homlof_target_hits} of "
-        f"{homlof_target_total}** tested input genes are "
-        "[genes with homozygous carriers of putative loss-of-function variants]"
-        "(https://www.nature.com/articles/s41586-026-10667-5), compared "
-        f"with **{homlof_reference_hits} of {homlof_reference_total}** non-target "
-        f"background genes. The observed direction is **{homlof_enrichment_direction}** "
+        f"Using the {homlof_background_label}, homozygous carriers of putative "
+        f"loss-of-function variants were observed for **{homlof_target_hits} of "
+        f"{homlof_target_total} ({homlof_target_percent:.1f}%)** tested input genes, "
+        f"compared with **{homlof_reference_hits} of {homlof_reference_total} "
+        f"({homlof_reference_percent:.1f}%)** non-target background genes "
+        "[(Koch et al.)](https://www.nature.com/articles/s41586-026-10667-5). "
+        f"The observed direction is **{homlof_enrichment_direction}** "
         "(two-sided Fisher's exact p-value = "
         f"**{homlof_fisher_pvalue:.2g}**)."
     )
