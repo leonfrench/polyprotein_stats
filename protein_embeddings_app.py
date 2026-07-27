@@ -502,10 +502,10 @@ if np.isfinite(homlof_fisher_pvalue):
     homlof_reference_percent = 100 * homlof_reference_hits / homlof_reference_total
     st.markdown(
         f"Using the {homlof_background_label}, homozygous carriers of putative "
-        f"loss-of-function variants were observed for **{homlof_target_hits} of "
-        f"{homlof_target_total} ({homlof_target_percent:.1f}%)** tested input genes, "
-        f"compared with **{homlof_reference_hits} of {homlof_reference_total} "
-        f"({homlof_reference_percent:.1f}%)** non-target background genes "
+        f"loss-of-function variants were observed for {homlof_target_hits} of "
+        f"{homlof_target_total} ({homlof_target_percent:.1f}%) tested input genes, "
+        f"compared with {homlof_reference_hits} of {homlof_reference_total} "
+        f"({homlof_reference_percent:.1f}%) non-target background genes "
         "[(Koch et al.)](https://www.nature.com/articles/s41586-026-10667-5). "
         f"The observed direction is **{homlof_enrichment_direction}** "
         "(two-sided Fisher's exact p-value = "
